@@ -332,7 +332,7 @@ class AnsiRenderer(object):
                         y += 1
                         dirty_pos = True
                     elif ch == '\r':
-                        x += start_x
+                        x = start_x
                         dirty_pos = True
                     elif ch == '\t':
                         x += tab_width
