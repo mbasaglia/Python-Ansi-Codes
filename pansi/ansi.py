@@ -13,7 +13,7 @@ class AnsiCode(object):
     """
 
     CSI = "\x1b["
-    CSI_PATTERN = re.compile("\x1b\[([<-?])([0-9;]*)([@-~])")
+    CSI_PATTERN = re.compile("\x1b\[([<-?]?)([0-9;]*)([@-~])")
 
     def __init__(self, terminator, args=[], private=""):
         self.terminator = terminator
@@ -41,7 +41,10 @@ class AnsiCode(object):
         """
         match = AnsiCode.CSI_PATTERN.match(string)
         if not match:
-            raise Exception("Not a valid escape sequence")
+            raise Exception(
+                "Not a valid escape sequence: %s" %
+                string.replace("\x1b", "\\e")
+            )
         return AnsiCode._from_match(match)
 
     @staticmethod
@@ -49,7 +52,18 @@ class AnsiCode(object):
         """
         Converts a regex match (matched from CSI_PATTERN) into a code object
         """
-        return AnsiCode(match.group(3), match.group(2).split(";"), match.group(1))
+        letter = match.group(3)
+        args = filter(bool, match.group(2).split(";"))
+        private = match.group(1)
+        if (letter == 'H' or letter == 'f') and not private:
+            return CursorPosition(
+                row=int(args[0]) if len(args) > 0 else 1,
+                column=int(args[1]) if len(args) > 1 else 1
+            )
+        elif letter == 'm' and not private:
+            return GraphicRendition(int(arg) for arg in args)
+        else:
+            return AnsiCode(letter, args, private)
 
     @staticmethod
     def split(string):
@@ -80,7 +94,7 @@ class CursorPosition(AnsiCode):
         if "x" in kwargs and "y" in kwargs:
             self.column = kwargs["x"]
             self.row = kwargs["y"]
-        if "column" in kwargs and "row" in kwargs:
+        elif "column" in kwargs and "row" in kwargs:
             self.column = kwargs["column"]
             self.row = kwargs["row"]
         elif len(args) == 2:
@@ -127,7 +141,7 @@ class GraphicRendition(AnsiCode):
 
         def __repr__(self):
             base = 30
-            if self.bright and self.color != reset:
+            if self.bright and self.color != GraphicRendition.Color.ResetColor:
                 base = 90
             if self.background:
                 base += 10
@@ -171,17 +185,70 @@ class GraphicRendition(AnsiCode):
 
     def __init__(self, *args):
         AnsiCode.__init__(self, "m")
-        if len(args) == 1 and type(args[0]) is list:
-            self.flags = args[0]
+
+        def _issequence(x):
+            try:
+                iter(x)
+                return True
+            except:
+                return False
+
+        if len(args) == 1 and _issequence(args[0]):
+            flags = list(args[0])
         else:
-            self.flags = args
+            flags = list(args)
+
+        def pop_color(index, flags, background, bright):
+            if index == 8:
+                if bright:
+                    return None
+                if len(flags) >= 2 and flags[0] == 5:
+                    flags.pop(0)
+                    return GraphicRendition.Color256(flags.pop(0), background)
+                if len(flags) >= 4 and flags[0] == 2:
+                    args = flags[1:4] + [background]
+                    flags.pop(0)
+                    flags.pop(0)
+                    flags.pop(0)
+                    flags.pop(0)
+                    return GraphicRendition.ColorRGB(*args)
+                return None
+            else:
+                return GraphicRendition.Color(index, background, bright)
+
+        self.flags = []
+
+        while flags:
+            flag = flags.pop(0)
+            if flag >= 30 and flag < 40:
+                color = pop_color(flag % 10, flags, False, False)
+                if color:
+                    self.flags.append(color)
+            elif flag >= 40 and flag < 50:
+                color = pop_color(flag % 10, flags, True, False)
+                if color:
+                    self.flags.append(color)
+            elif flag >= 90 and flag < 100:
+                color = pop_color(flag % 10, flags, False, True)
+                if color:
+                    self.flags.append(color)
+            elif flag >= 100 and flag < 110:
+                color = pop_color(flag % 10, flags, True, True)
+                if color:
+                    self.flags.append(color)
+            else:
+                self.flags.append(flag)
 
     @staticmethod
     def reverse(flag):
         """
         Returns a flag that undoes the given one
         """
-        if flag == 1:
+        if type(flag) is not int:
+            if flag.background:
+                return 49
+            return 39
+        elif flag == 1:
             return 22
         elif flag == 22:
             return 1
@@ -319,31 +386,52 @@ class AnsiRenderer(object):
             if isinstance(item, AnsiCode):
                 self.ansi(item)
             else:
-                for ch in string:
-                    if ch == ' ':
-                        x += 1
-                        dirty_pos = True
-                    elif ch == '\n':
-                        x = start_x
-                        y += 1
-                        dirty_pos = True
-                    elif ch == '\v':
-                        x += 1
-                        y += 1
-                        dirty_pos = True
-                    elif ch == '\r':
-                        x += start_x
-                        dirty_pos = True
-                    elif ch == '\t':
-                        x += tab_width
-                        dirty_pos = True
-                    else:
-                        if dirty_pos:
+                mover = CharMover(start_x, start_y)
+                mover.move(x, y, False)
+                for ch in mover.loop(string):
+                        if mover.moved:
                             self.move_cursor(x, y)
-                            dirty_pos = False
                         self.output.write(ch)
-                        x += 1
+                x = mover.x
+                y = mover.y
         self.output.flush()
+
+
+class CharMover(object):
+    def __init__(self, start_x, start_y, tab_width=4):
+        self.x = self.start_x = start_x
+        self.y = self.start_y = start_y
+        self.tab_width = tab_width
+        self.moved = False
+
+    def move(self, x, y, moved=True):
+        self.x = x
+        self.y = y
+        self.moved = moved or self.moved
+
+    def loop(self, string):
+        for ch in string:
+            if ch == ' ':
+                self.x += 1
+                self.moved = True
+            elif ch == '\n':
+                self.x = self.start_x
+                self.y += 1
+                self.moved = True
+            elif ch == '\v':
+                self.x += 1
+                self.y += 1
+                self.moved = True
+            elif ch == '\r':
+                self.x += self.start_x
+                self.moved = True
+            elif ch == '\t':
+                self.x += self.tab_width
+                self.moved = True
+            else:
+                yield ch
+                self.moved = False
+                self.x += 1
 
 
 @contextmanager
