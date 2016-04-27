@@ -5,6 +5,7 @@ import unittest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pansi.ansi import *
 
+
 class TestAnsiCode(unittest.TestCase):
     def test_ctor(self):
         a = AnsiCode("m")
