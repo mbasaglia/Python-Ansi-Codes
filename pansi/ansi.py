@@ -423,7 +423,7 @@ class CharMover(object):
                 self.y += 1
                 self.moved = True
             elif ch == '\r':
-                self.x += self.start_x
+                self.x = self.start_x
                 self.moved = True
             elif ch == '\t':
                 self.x += self.tab_width

@@ -184,4 +184,47 @@ class TestGraphicRendition(unittest.TestCase):
     def test_flag_values(self):
         pass
 
+
+class TestCharMover(unittest.TestCase):
+    def test_move(self):
+        m = CharMover(0, 0)
+        self.assertFalse(m.moved)
+        m.move(2, 3)
+        self.assertTrue(m.moved)
+        self.assertEquals(m.x, 2)
+        self.assertEquals(m.y, 3)
+
+    def test_loop(self):
+        m = CharMover(0, 0)
+        string = "   ab\nc\td\re\vf"
+        gen = m.loop(string)
+
+        self.assertFalse(m.moved)
+        self.assertEquals(next(gen), 'a')
+        self.assertEquals((m.x, m.y), (3, 0))
+        self.assertTrue(m.moved)
+
+        self.assertEquals(next(gen), 'b')
+        self.assertEquals((m.x, m.y), (4, 0))
+        self.assertFalse(m.moved)
+
+        self.assertEquals(next(gen), 'c')
+        self.assertEquals((m.x, m.y), (0, 1))
+        self.assertTrue(m.moved)
+
+        self.assertEquals(next(gen), 'd')
+        self.assertEquals((m.x, m.y), (5, 1))
+        self.assertTrue(m.moved)
+
+        self.assertEquals(next(gen), 'e')
+        self.assertEquals((m.x, m.y), (0, 1))
+        self.assertTrue(m.moved)
+
+        self.assertEquals(next(gen), 'f')
+        self.assertEquals((m.x, m.y), (2, 2))
+        self.assertTrue(m.moved)
+
+
+
+
 unittest.main()
