@@ -124,6 +124,7 @@ class RgbColor(object):
     def __ne__(self, oth):
         return not (self == oth)
 
+
 class UnchangedColorType(object):
     pass
 UnchangedColor = UnchangedColorType()
@@ -171,7 +172,8 @@ class Layer(object):
 
     @property
     def height(self):
-        return self.text.count("\n")
+        extra = 1 if self.text and self.text[-1] != '\n' else 0
+        return self.text.count("\n") + extra
 
 
 class FreeColorLayer(object):
@@ -184,7 +186,7 @@ class FreeColorLayer(object):
         if y >= self.height:
             self.height = y + 1
         if x >= self.width:
-            self.width = self.height + 1
+            self.width = x + 1
 
         self.matrix[(x, y)] = (char, color)
 

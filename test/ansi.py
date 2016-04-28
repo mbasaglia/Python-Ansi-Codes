@@ -226,6 +226,4 @@ class TestCharMover(unittest.TestCase):
         self.assertTrue(m.moved)
 
 
-
-
 unittest.main()

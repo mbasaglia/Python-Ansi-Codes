@@ -2,4 +2,7 @@ from .ansi import AnsiFormatter
 from .text import TextFormatter
 from .svg import SvgFormatter
 from .irc import IrcFormatter
-from .png import PngFormatter
+try:
+    from .png import PngFormatter
+except ImportError:
+    pass
