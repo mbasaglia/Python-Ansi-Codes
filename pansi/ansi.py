@@ -98,6 +98,12 @@ class AnsiCode(object):
             yield AnsiCode._from_match(match)
             string = string[match.end():]
 
+    def __eq__(self, other):
+        return repr(self) == repr(other)
+
+    def __ne__(self, other):
+        return not (self == other)
+
 
 class CursorPosition(AnsiCode):
     """
@@ -299,6 +305,15 @@ class GraphicRendition(AnsiCode):
 SGR = GraphicRendition
 
 
+#TODO Make this a module
+class common(object):
+    hide_cursor = AnsiCode("l", [25], "?")
+    show_cursor = AnsiCode("h", [25], "?")
+    alt_screen  = AnsiCode("h", [47], "?")
+    main_screen = AnsiCode("l", [47], "?")
+    clear_screen= AnsiCode("J", [2])
+
+
 class AnsiRenderer(object):
     """
     Class with a simplified interface to render ANSI codes to a file object
@@ -312,22 +327,22 @@ class AnsiRenderer(object):
         """
         Context manager that disables the text cursor
         """
-        self.ansi("l", [25], "?")
+        self.ansi(common.hide_cursor)
         try:
             yield
         finally:
-            self.ansi("h", [25], "?")
+            self.ansi(common.show_cursor)
 
     @contextmanager
     def context_alt_screen(self):
         """
         Context manager that switch to an alternate screen
         """
-        self.ansi("h", [47], "?")
+        self.ansi(common.alt_screen)
         try:
             yield
         finally:
-            self.ansi("l", [47], "?")
+            self.ansi(common.main_screen)
 
     @contextmanager
     def context_sgr(self, *args, **kwargs):
@@ -378,7 +393,7 @@ class AnsiRenderer(object):
         """
         Clears the screen
         """
-        self.ansi("J", [2])
+        self.ansi(common.clear_screen)
 
     def write(self, *args):
         """
@@ -397,7 +412,6 @@ class AnsiRenderer(object):
         """
         x = start_x
         y = start_y
-        dirty_pos = False
         for item in AnsiCode.split(string):
             if isinstance(item, AnsiCode):
                 self.ansi(item)
@@ -405,9 +419,9 @@ class AnsiRenderer(object):
                 mover = CharMover(start_x, start_y)
                 mover.move(x, y, False)
                 for ch in mover.loop(string):
-                        if mover.moved:
-                            self.move_cursor(x, y)
-                        self.output.write(ch)
+                    if mover.moved:
+                        self.move_cursor(x, y)
+                    self.output.write(ch)
                 x = mover.x
                 y = mover.y
         self.output.flush()

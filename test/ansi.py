@@ -64,6 +64,19 @@ class TestAnsiCode(unittest.TestCase):
         self.assertTrue(isinstance(split[4], AnsiCode))
         self.assertEqual(split[5], "Foo")
 
+    def test_compare(self):
+        self.assertTrue(AnsiCode("m", ["1", "2", "3"]) ==
+                        AnsiCode.parse("\x1b[1;2;3m"))
+
+        self.assertTrue(AnsiCode("q", ["1", "2", "3"]) !=
+                        AnsiCode.parse("\x1b[1;2;3m"))
+
+        self.assertTrue(AnsiCode("m", ["1", "5", "3"]) !=
+                        AnsiCode.parse("\x1b[1;2;3m"))
+
+        self.assertTrue(AnsiCode("m", ["1", "2", "3"], "?") !=
+                        AnsiCode.parse("\x1b[1;2;3m"))
+
 
 class TestCursorPosition(unittest.TestCase):
     def test_parse(self):

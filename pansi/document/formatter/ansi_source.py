@@ -19,18 +19,20 @@ from StringIO import StringIO
 from .. import tree
 from .ansi import AnsiFormatter
 
-_common_replacements = {
+
+_default_replacements = {
     "\n": "\\n",
     "\"": "\\\"",
     "\\": "\\\\",
     "\x1b": "\\x1b",
 }
 
+
 class AnsiSourceFormatter(object):
     flat = True
 
     def __init__(self, prefix='"', suffix='"\n',
-                 replacements=_common_replacements, *args, **kwargs):
+                 replacements=_default_replacements, *args, **kwargs):
         self.prefix = prefix
         self.suffix = suffix
         self._ansi_formatter = AnsiFormatter(*args, **kwargs)
