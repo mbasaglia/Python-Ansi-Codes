@@ -19,6 +19,7 @@ from .text import TextFormatter
 from .svg import SvgFormatter
 from .irc import IrcFormatter
 from .ansi_source import AnsiSourceFormatter
+from .json import JsonFormatter
 try:
     from .png import PngFormatter
 except ImportError:
