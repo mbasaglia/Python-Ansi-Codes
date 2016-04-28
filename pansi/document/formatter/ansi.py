@@ -5,27 +5,24 @@ from ...ansi import SGR
 class AnsiFormatter(object):
     flat = True
 
-    def document(self, doc):
-        return self.layer(doc.flattened())
+    def document(self, doc, output):
+        self.layer(doc.flattened(), output)
 
-    def layer(self, layer):
+    def layer(self, layer, output):
         if isinstance(layer, tree.Layer):
-            return self.color(layer.color) + layer.text
-
-        if isinstance(layer, tree.FreeColorLayer):
-            text = ""
+            output.write(self.color(layer.color) + layer.text)
+        elif isinstance(layer, tree.FreeColorLayer):
             prev_color = None
             for y in xrange(layer.height):
                 for x in xrange(layer.width):
                     char, color = layer.matrix.get((x, y), (" ", tree.UnchangedColor))
                     if color is not tree.UnchangedColor and color != prev_color:
                         prev_color = color
-                        text += self.color(color)
-                    text += char
-                text += "\n"
-            return text
-
-        raise TypeError("Expected layer type")
+                        output.write(self.color(color))
+                    output.write(char)
+                output.write("\n")
+        else:
+            raise TypeError("Expected layer type")
 
     def color(self, color):
         if color is None:
