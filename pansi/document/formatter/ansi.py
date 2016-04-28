@@ -1,7 +1,7 @@
-from io import StringIO
 from .. import tree
 from ...ansi import SGR
 
+# TODO Standard mode
 class AnsiFormatter(object):
     flat = True
 

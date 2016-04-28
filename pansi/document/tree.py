@@ -32,7 +32,7 @@ class Palette(object):
                 self.colors[self.names.index(name)] = color
             else:
                 self.names.append(name)
-                self.colors.append(name)
+                self.colors.append(color)
         return self
 
     def __len__(self):
@@ -157,7 +157,7 @@ class Document(object):
 
     @property
     def height(self):
-        return max(layer.height for layer in self.height)
+        return max(layer.height for layer in self.layers)
 
 
 class Layer(object):
