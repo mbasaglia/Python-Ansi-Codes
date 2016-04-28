@@ -179,17 +179,32 @@ class Document(object):
 
 class Layer(object):
     def __init__(self, text="", color=None):
-        self.text = text
+        if text.endswith("\n"):
+            text = text[:-1]
+        self.lines = text.split("\n") if text else []
         self.color = color
 
     @property
     def width(self):
-        return max(len(line) for line in self.text.split("\n"))
+        return max(len(line) for line in self.lines) if self.lines else 0
 
     @property
     def height(self):
-        extra = 1 if self.text and self.text[-1] != '\n' else 0
-        return self.text.count("\n") + extra
+        return len(self.lines)
+
+    @property
+    def text(self):
+        if not self.lines:
+            return ""
+        return "\n".join(self.lines) + "\n"
+
+    def set_char(self, x, y, char):
+        if y >= self.height:
+            self.lines += [""] * (y - self.height + 1)
+        if x >= len(self.lines[y]):
+            self.lines[y] += " " * (x - len(self.lines[y]) + 1)
+
+        self.lines[y] = self.lines[y][:x] + char + self.lines[y][x+1:]
 
 
 class FreeColorLayer(object):

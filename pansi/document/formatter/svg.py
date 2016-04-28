@@ -20,9 +20,16 @@ from ...ansi import SGR
 
 class SvgFormatter(object):
 
-    def __init__(self, flatten=False, font_size=12):
-        self.font_size = font_size
+    def __init__(
+            self,
+            flatten=False,
+            background=tree.IndexedColor(0, tree.colors8_dark),
+            text_color=tree.IndexedColor(7, tree.colors8_dark),
+            font_size=12):
         self.flat = flatten
+        self.background = background
+        self.text_color = text_color
+        self.font_size = font_size
 
     @property
     def font_width(self):
@@ -34,7 +41,11 @@ class SvgFormatter(object):
 
         output.write("<?xml version='1.0' encoding='UTF-8' ?>\n")
         output.write("<svg xmlns='http://www.w3.org/2000/svg' width='%s' height='%s'>\n" % (width, height))
-        output.write("<rect style='fill:black;stroke:none;' width='%s' height='%s' x='0' y='0' />\n" % (width, height))
+        output.write("<rect style='fill:%s;stroke:none;' width='%s' height='%s' x='0' y='0' />\n" % (
+            self.color(self.background),
+            width,
+            height
+        ))
 
         if self.flat:
             self.layer(doc.flattened(), output)
@@ -49,7 +60,8 @@ class SvgFormatter(object):
         css = [
             "font-family:monospace",
             "font-size:%spx" % self.font_size,
-            "font-weight:bold",
+            "font-weight:%s" % self.color(self.text_color),
+            "fill:white",
         ]
         open_rect = lambda: "<text y='0' x='0' style='%s' xml:space='preserve'>\n" % ";".join(css)
 
@@ -58,13 +70,14 @@ class SvgFormatter(object):
             css.append("letter-spacing:-%spx" % (self.font_width * 0.2))
             output.write(open_rect())
             y = 0
-            for line in layer.text.split("\n"):
+            for line in layer.lines:
                 y += 1
-                output.write("<tspan x='{x}' y='{y}'>{line}</tspan>\n".format(
-                    x=0,
-                    y=y * self.font_size,
-                    line=escape(line)
-                ))
+                if line:
+                    output.write("<tspan x='{x}' y='{y}'>{line}</tspan>\n".format(
+                        x=0,
+                        y=y * self.font_size,
+                        line=escape(line)
+                    ))
         elif isinstance(layer, tree.FreeColorLayer):
             output.write(open_rect())
             prev_color = None
