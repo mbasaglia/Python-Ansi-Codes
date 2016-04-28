@@ -3,7 +3,6 @@ from .. import tree
 from ...ansi import SGR
 
 class SvgFormatter(object):
-    flat = False
 
     def __init__(self, flatten=False, font_size=12):
         self.font_size = font_size
