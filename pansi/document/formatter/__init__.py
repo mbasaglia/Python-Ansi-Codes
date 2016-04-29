@@ -20,6 +20,7 @@ from .svg import SvgFormatter
 from .irc import IrcFormatter
 from .ansi_source import AnsiSourceFormatter
 from .json import JsonFormatter
+from .xml import XmlFormatter
 try:
     from .png import PngFormatter
 except ImportError:
