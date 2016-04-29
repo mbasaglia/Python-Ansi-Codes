@@ -17,6 +17,7 @@
 from __future__ import absolute_import
 import json
 
+from . import factory
 from .. import tree
 from ._utils import string_to_color
 
@@ -54,3 +55,6 @@ class JsonLoader(object):
             with open(file) as f:
                 return self.load_file(f)
         return self.load_json(json.load(file))
+
+
+factory.register(JsonLoader(), "json")

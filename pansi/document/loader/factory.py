@@ -15,41 +15,37 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os.path
-from .. import tree
-from .. import _misc
+from .. import tree, _misc
 
 
-_formatters = {}
+_loaders = {}
 
 
-def register(formatter, file_extension):
-    _formatters[file_extension] = formatter
+def register(loader, file_extension):
+    _loaders[file_extension] = loader
 
 
-def formatter(file_extension):
-    return _formatters[file_extension]
+def loader(file_extension):
+    return _loaders[file_extension]
 
 
-def formatter_for_file(file_name):
-    return formatter(_misc.extension(file_name))
+def loader_for_file(file_name):
+    return loader(_misc.extension(file_name))
 
 
-def save(document, file, hint=None):
+# TODO Use libmagic?
+def load(file, hint=None):
     if type(file) is str:
-        with open(file, "w") as file_obj:
-            save(document, file_obj, hint)
-            return
+        with open(file, "r") as file_obj:
+            return load(file_obj, hint)
 
     if hint is not None:
-        fmt = formatter(hint)
+        ldr = loader(hint)
     else:
-        fmt = formatter_for_file(file.name)
+        ldr = loader_for_file(file.name)
 
-    if isinstance(document, tree.Document):
-        fmt.document(document, file)
-    else:
-        fmt.layer(document, file)
+    return ldr.load_file(file)
 
 
 def formats():
-    return sorted(_formatters.keys())
+    return sorted(_loaders.keys())

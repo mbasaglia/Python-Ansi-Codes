@@ -17,8 +17,9 @@
 from __future__ import absolute_import
 import xml.etree.cElementTree as ElementTree
 
-from .. import tree
+from . import factory
 from ._utils import string_to_color
+from .. import tree
 
 
 class XmlLoader(object):
@@ -51,3 +52,6 @@ class XmlLoader(object):
 
     def load_file(self, file):
         return self.load_xml(ElementTree.parse(file).getroot())
+
+
+factory.register(XmlLoader(), "xml")

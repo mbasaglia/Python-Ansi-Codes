@@ -14,8 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from .ansi import AnsiLoader
-from .json import JsonLoader
-from .xml import XmlLoader
+import os.path
 
-from . import factory
+def _split(file_name):
+    return os.path.basename(file_name).split(".", 1)
+
+def basename(file_name):
+    return _split(file_name)[0]
+
+def extension(file_name):
+    split = _split(file_name)
+    return split[1] if len(split) > 1 else ""
