@@ -14,6 +14,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from .ansi import AnsiLoader
-from .json import JsonLoader
-from .xml import XmlLoader
+import re
+from .. import tree
+
+_rgb_color_regex = re.compile("^#[0-9a-fA-F]{6}$")
+
+def string_to_color(color):
+    if not color:
+        return None
+    if _rgb_color_regex.match(color):
+        return tree.RgbColor(color[1:3], color[3:5], color[5:7])
+    if color in tree.colors16.names:
+        return tree.IndexedColor(str(color), tree.colors16)
+    if color in tree.colors256.names:
+        return tree.IndexedColor(str(color), tree.colors256)
+    return None

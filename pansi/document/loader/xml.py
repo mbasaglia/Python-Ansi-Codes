@@ -15,42 +15,39 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from __future__ import absolute_import
-import json
+import xml.etree.cElementTree as ElementTree
 
 from .. import tree
 from ._utils import string_to_color
 
 
-class JsonLoader(object):
-    def _load_json_layer(self, json_dict):
-        if "chars" in json_dict:
+class XmlLoader(object):
+    def _load_xml_layer(self, element):
+        if len(element):
             layer = tree.FreeColorLayer()
-            for char in json_dict["chars"]:
+            for char in element.findall("char"):
                 layer.set_char(
-                    int(char["x"]),
-                    int(char["y"]),
-                    char["char"],
+                    int(char.attrib["x"]),
+                    int(char.attrib["y"]),
+                    char.text,
                     string_to_color(char.get("color", ""))
                 )
             return layer
 
         return tree.Layer(
-            json_dict["text"],
-            string_to_color(json_dict.get("color", ""))
+            element.text,
+            string_to_color(element.get("color", ""))
         )
 
-    def load_json(self, json_dict):
+    def load_xml(self, doc_element):
         return tree.Document(
-            json_dict.get("name", ""),
-            [self._load_json_layer(layer) for layer in json_dict.get("layers", [])],
-            json_dict.get("metadata", {}),
+            doc_element.get("name", ""),
+            [self._load_xml_layer(layer) for layer in doc_element.findall("layer")],
+            doc_element.get("metadata", {}),
         )
 
     def load_string(self, string):
-        return self.load_json(json.loads(string))
+        return self.load_xml(ElementTree.fromstring(string).getroot())
 
     def load_file(self, file):
-        if type(file) is str:
-            with open(file) as f:
-                return self.load_file(f)
-        return self.load_json(json.load(file))
+        return self.load_xml(ElementTree.parse(file).getroot())
