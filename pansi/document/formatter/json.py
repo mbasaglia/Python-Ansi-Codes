@@ -16,6 +16,7 @@
 #
 from __future__ import absolute_import
 import json
+from . import factory
 from .. import tree
 
 class JsonFormatter(object):
@@ -75,3 +76,6 @@ class JsonFormatter(object):
 
     def color(self, color):
         json.dumps(self.color_dict(color), **self._json_args())
+
+
+factory.register(JsonFormatter(), "json")

@@ -15,9 +15,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import cairosvg
+from StringIO import StringIO
+
 from .. import tree
 from .svg import SvgFormatter
-from StringIO import StringIO
+from . import factory
 
 class PngFormatter(object):
     flat = True
@@ -37,3 +39,6 @@ class PngFormatter(object):
 
     def color(self, color):
         return ""
+
+
+factory.register(PngFormatter(), "png")

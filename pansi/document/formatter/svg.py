@@ -16,6 +16,8 @@
 #
 from __future__ import absolute_import
 from xml.sax.saxutils import escape
+
+from . import factory
 from .. import tree
 from ...ansi import SGR
 
@@ -101,3 +103,6 @@ class SvgFormatter(object):
         if color is None:
             return "inherit"
         return tree.hex_rgb(color.rgb)
+
+
+factory.register(SvgFormatter(), "svg")

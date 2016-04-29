@@ -16,8 +16,10 @@
 #
 import re
 from StringIO import StringIO
-from .. import tree
+
+from . import factory
 from .ansi import AnsiFormatter
+from .. import tree
 
 
 _default_replacements = {
@@ -83,3 +85,9 @@ AnsiSourceFormatter.builtins = {
         {"\\": "\\\\", "\"": "\\\"", "\x1b": "\\x1b", "$": "\\$"}
     ),
 }
+
+
+factory.register(AnsiSourceFormatter.builtins["bash"], "sh")
+factory.register(AnsiSourceFormatter.builtins["python"], "py")
+factory.register(AnsiSourceFormatter.builtins["perl"], "pl")
+factory.register(AnsiSourceFormatter.builtins["php"], "php")

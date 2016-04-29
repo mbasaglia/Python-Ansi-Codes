@@ -16,6 +16,8 @@
 #
 from __future__ import absolute_import
 import xml.etree.cElementTree as ElementTree
+
+from . import factory
 from .. import tree
 
 
@@ -66,3 +68,6 @@ class XmlFormatter(object):
         if color is None:
             return ""
         return color.name
+
+
+factory.register(XmlFormatter(), "xml")

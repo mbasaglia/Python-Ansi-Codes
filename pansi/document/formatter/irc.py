@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
+from . import factory
 from .. import tree
 
 # TODO Color conversions
@@ -57,3 +59,6 @@ class IrcFormatter(object):
             raise TypeError("Expected document color")
 
         return "\x03%s,01" % code
+
+
+factory.register(IrcFormatter(), "irc")

@@ -16,6 +16,7 @@
 #
 from .. import tree
 from ...ansi import SGR
+from . import factory
 
 # TODO Standard mode
 class AnsiFormatter(object):
@@ -59,3 +60,6 @@ class AnsiFormatter(object):
             raise TypeError("Expected document color")
 
         return repr(SGR(ansi_color))
+
+
+factory.register(AnsiFormatter(), "ansi")

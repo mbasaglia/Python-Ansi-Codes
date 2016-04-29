@@ -25,3 +25,5 @@ try:
     from .png import PngFormatter
 except ImportError:
     pass
+
+from . import factory
