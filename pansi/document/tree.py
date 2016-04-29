@@ -147,10 +147,10 @@ UnchangedColor = UnchangedColorType()
 
 
 class Document(object):
-    def __init__(self, name="", layers=[]):
+    def __init__(self, name="", layers=[], metadata={}):
         self.name = name
-        self.metadata = {}
         self.layers = layers
+        self.metadata = metadata
 
     def flattened(self):
         if len(self.layers) == 0:

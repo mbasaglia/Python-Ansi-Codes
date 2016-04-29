@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import os.path
 from .. import tree
 from ... import ansi
 
@@ -72,9 +73,13 @@ class AnsiLoader(object):
     def load_file(self, file):
         if type(file) is str:
             with open(file) as f:
-                return self.load_string(f.read())
+                return self.load_file(f)
         else:
-            return self.load_string(file.read())
+            if hasattr(file.name):
+                name = os.path.basename(file.name).split(".")[0]
+            else:
+                name = ""
+            return self.load_string(file.read(), name)
 
     @staticmethod
     def color_from_ansi(color, background=False):
