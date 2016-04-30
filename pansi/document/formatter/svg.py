@@ -19,7 +19,7 @@ from xml.sax.saxutils import escape
 
 from . import factory
 from .. import tree
-from ...ansi import SGR
+
 
 class SvgFormatter(object):
 
@@ -58,7 +58,6 @@ class SvgFormatter(object):
 
         output.write("</svg>\n")
 
-
     def layer(self, layer, output):
         css = [
             "font-family:monospace",
@@ -66,7 +65,9 @@ class SvgFormatter(object):
             "font-weight:%s" % self.color(self.text_color),
             "fill:white",
         ]
-        open_rect = lambda: "<text y='0' x='0' style='%s' xml:space='preserve'>\n" % ";".join(css)
+
+        def open_rect():
+            return "<text y='0' x='0' style='%s' xml:space='preserve'>\n" % ";".join(css)
 
         if isinstance(layer, tree.Layer):
             css.append("fill:%s" % self.color(layer.color))

@@ -17,7 +17,9 @@
 import re
 from .. import tree
 
+
 _rgb_color_regex = re.compile("^#[0-9a-fA-F]{6}$")
+
 
 def string_to_color(color):
     if not color:

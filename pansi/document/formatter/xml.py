@@ -38,12 +38,12 @@ class XmlFormatter(object):
 
     def layer_element(self, layer):
         if isinstance(layer, tree.Layer):
-            xml_layer = ElementTree.Element("layer");
+            xml_layer = ElementTree.Element("layer")
             xml_layer.attrib["color"] = self.color(layer.color)
             xml_layer.text = layer.text
             return xml_layer
         elif isinstance(layer, tree.FreeColorLayer):
-            xml_layer = ElementTree.Element("layer");
+            xml_layer = ElementTree.Element("layer")
             for pos in sorted(layer.matrix.keys(), key=lambda a: (a[1], a[0])):
                 char_xml = ElementTree.SubElement(xml_layer, "char")
                 char_xml.attrib["color"] = self.color(layer.matrix[pos][1])
@@ -56,7 +56,6 @@ class XmlFormatter(object):
 
     def write_element(self, element, output):
         ElementTree.ElementTree(element).write(output, "utf-8", True)
-
 
     def document(self, doc, output):
         self.write_element(self.document_element(doc), output)

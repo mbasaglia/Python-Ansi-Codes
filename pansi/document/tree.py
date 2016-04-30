@@ -17,6 +17,7 @@
 import copy
 from ..ansi import CharMover
 
+
 class Palette(object):
     def __init__(self, *args):
         if len(args) == 1:
@@ -207,7 +208,7 @@ class Layer(object):
         if x >= len(self.lines[y]):
             self.lines[y] += " " * (x - len(self.lines[y]) + 1)
 
-        self.lines[y] = self.lines[y][:x] + char + self.lines[y][x+1:]
+        self.lines[y] = self.lines[y][:x] + char + self.lines[y][x + 1:]
 
 
 class FreeColorLayer(object):

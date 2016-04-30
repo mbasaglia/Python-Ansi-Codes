@@ -31,6 +31,7 @@ def load_dir(path):
             ))
     return doc
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Renders an pansi document."

@@ -87,7 +87,6 @@ class AnsiCode(object):
         Generator that splits a string into a list.
         Each element can either be a simple string or an AnsiCode object
         """
-        result = []
         while string:
             match = AnsiCode.CSI_PATTERN.search(string)
             if not match:
@@ -149,11 +148,11 @@ class GraphicRendition(AnsiCode):
         Black   = 0
         Red     = 1
         Green   = 2
-        Yellow  = Red|Green
+        Yellow  = Red | Green
         Blue    = 4
-        Magenta = Blue|Red
-        Cyan    = Blue|Green
-        White   = Red|Green|Blue
+        Magenta = Blue | Red
+        Cyan    = Blue | Green
+        White   = Red | Green | Blue
         ResetColor = 9
 
         def __init__(self, color=ResetColor, background=False, bright=False):
@@ -305,13 +304,13 @@ class GraphicRendition(AnsiCode):
 SGR = GraphicRendition
 
 
-#TODO Make this a module
+# TODO Make this a module
 class common(object):
-    hide_cursor = AnsiCode("l", [25], "?")
-    show_cursor = AnsiCode("h", [25], "?")
-    alt_screen  = AnsiCode("h", [47], "?")
-    main_screen = AnsiCode("l", [47], "?")
-    clear_screen= AnsiCode("J", [2])
+    hide_cursor  = AnsiCode("l", [25], "?")
+    show_cursor  = AnsiCode("h", [25], "?")
+    alt_screen   = AnsiCode("h", [47], "?")
+    main_screen  = AnsiCode("l", [47], "?")
+    clear_screen = AnsiCode("J", [2])
 
 
 class AnsiRenderer(object):

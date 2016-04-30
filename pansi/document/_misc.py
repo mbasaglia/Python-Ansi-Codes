@@ -16,11 +16,14 @@
 #
 import os.path
 
+
 def _split(file_name):
     return os.path.basename(file_name).split(".", 1)
 
+
 def basename(file_name):
     return _split(file_name)[0]
+
 
 def extension(file_name):
     split = _split(file_name)

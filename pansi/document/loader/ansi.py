@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import os.path
 from . import factory
 from .. import tree
 from .. import _misc
 from ... import ansi
+
 
 class AnsiLoader(object):
     class _LayerTracker(object):
@@ -50,7 +50,6 @@ class AnsiLoader(object):
 
             self.layers[index].set_char(x, y, ch)
 
-
     def __init__(self, colors_to_layers=True):
         self.colors_to_layers = colors_to_layers
 
@@ -66,7 +65,7 @@ class AnsiLoader(object):
                 color = AnsiLoader.color_from_ansi(item)
             elif isinstance(item, ansi.AnsiCode):
                 if item == ansi.common.clear_screen:
-                    layer = tree.FreeColorLayer()
+                    layer_tracker.clear()
             else:
                 for ch in mover.loop(item):
                     layer_tracker.set_char(mover.x, mover.y, ch, color)
@@ -95,7 +94,7 @@ class AnsiLoader(object):
         bright = False
         for flag in color.flags:
             if flag == 0:
-                result == None
+                result = None
                 bright = False
             elif flag == 1:
                 bright = True

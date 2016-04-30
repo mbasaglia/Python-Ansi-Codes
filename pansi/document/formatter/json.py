@@ -19,6 +19,7 @@ import json
 from . import factory
 from .. import tree
 
+
 class JsonFormatter(object):
     flat = False
 

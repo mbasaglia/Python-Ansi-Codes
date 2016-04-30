@@ -17,6 +17,7 @@
 from . import factory
 from .. import tree
 
+
 class TextFormatter(object):
     flat = True
 
@@ -27,7 +28,6 @@ class TextFormatter(object):
         if isinstance(layer, tree.Layer):
             output.write(layer.text)
         elif isinstance(layer, tree.FreeColorLayer):
-            prev_color = None
             for y in xrange(layer.height):
                 for x in xrange(layer.width):
                     char, color = layer.matrix.get((x, y), (" ", None))

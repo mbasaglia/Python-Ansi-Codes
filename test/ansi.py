@@ -115,6 +115,7 @@ class TestCursorPosition(unittest.TestCase):
     def test_args(self):
         self.assertEqual(CursorPosition(row=3, column=4).args(), [3, 4])
 
+
 class TestGraphicRendition(unittest.TestCase):
     def test_alias(self):
         self.assertEqual(SGR, GraphicRendition)

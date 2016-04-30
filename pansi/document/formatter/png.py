@@ -21,6 +21,7 @@ from .. import tree
 from .svg import SvgFormatter
 from . import factory
 
+
 class PngFormatter(object):
     flat = True
 

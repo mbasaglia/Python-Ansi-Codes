@@ -18,6 +18,7 @@
 from . import factory
 from .. import tree
 
+
 # TODO Color conversions
 class IrcFormatter(object):
     flat = True

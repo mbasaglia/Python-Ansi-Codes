@@ -19,7 +19,6 @@ from StringIO import StringIO
 
 from . import factory
 from .ansi import AnsiFormatter
-from .. import tree
 
 
 _default_replacements = {
