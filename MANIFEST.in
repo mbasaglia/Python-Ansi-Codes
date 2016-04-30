@@ -1,0 +1,3 @@
+recursive-include test *.py
+include README
+include MANIFEST.in
