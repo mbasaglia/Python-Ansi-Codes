@@ -20,7 +20,7 @@ SELFDIR=$(dirname $(readlink -se "${BASH_SOURCE[0]}"))
 
 COVERAGE_RUN_FLAGS=(
     run
-    --source=pansi
+    --source=patsi
     --branch
     --append
 )
@@ -101,7 +101,7 @@ do
     shift
 done
 
-[ "${#actions[@]}" -eq 0 ] && actions=(run report)
+[ "${#actions[@]}" -eq 0 ] && actions=(run coverage)
 
 for action in "${actions[@]}"
 do

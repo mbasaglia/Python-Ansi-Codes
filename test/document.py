@@ -19,7 +19,7 @@ import os
 import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pansi.document.tree import *
+from patsi.document.tree import *
 
 class TestPalette(unittest.TestCase):
     names = ["foo", "bar"]

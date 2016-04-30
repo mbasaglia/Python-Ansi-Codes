@@ -1,6 +1,5 @@
 *.kdev4
 *.pyc
-env/
 .coverage
-.env
+.env/
 activate

@@ -18,7 +18,7 @@
 import os
 import sys
 import argparse
-from pansi.document import tree, formatter, loader, _misc
+from patsi.document import tree, formatter, loader, _misc
 
 
 def load_dir(path):
@@ -34,7 +34,7 @@ def load_dir(path):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Renders an pansi document."
+        description="Renders an patsi document."
     )
 
     parser.add_argument(
