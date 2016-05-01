@@ -17,3 +17,4 @@
 from .tree import *
 import formatter
 import loader
+import palette

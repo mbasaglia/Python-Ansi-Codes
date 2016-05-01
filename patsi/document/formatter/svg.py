@@ -19,6 +19,7 @@ from xml.sax.saxutils import escape
 
 from . import factory
 from .. import tree
+from .. import palette
 
 
 class SvgFormatter(object):
@@ -26,8 +27,8 @@ class SvgFormatter(object):
     def __init__(
             self,
             flatten=False,
-            background=tree.IndexedColor(0, tree.colors8_dark),
-            text_color=tree.IndexedColor(7, tree.colors8_dark),
+            background=tree.IndexedColor(0, palette.colors8_dark),
+            text_color=tree.IndexedColor(7, palette.colors8_dark),
             font_size=12):
         self.flat = flatten
         self.background = background

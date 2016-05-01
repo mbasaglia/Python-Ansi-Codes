@@ -20,6 +20,7 @@ import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from patsi.document.tree import *
+from patsi.document import palette # TODO Split tests
 
 class TestPalette(unittest.TestCase):
     names = ["foo", "bar"]
@@ -27,60 +28,60 @@ class TestPalette(unittest.TestCase):
     zipped = zip(names, colors)
 
     def test_ctor(self):
-        p = Palette(self.zipped)
+        p = palette.Palette(self.zipped)
         self.assertEquals(p.names, self.names)
         self.assertEquals(p.colors, self.colors)
 
-        p = Palette(*self.zipped)
+        p = palette.Palette(*self.zipped)
         self.assertEquals(p.names, self.names)
         self.assertEquals(p.colors, self.colors)
 
-        p = Palette(item for item in self.zipped)
+        p = palette.Palette(item for item in self.zipped)
         self.assertEquals(p.names, self.names)
         self.assertEquals(p.colors, self.colors)
 
     def test_rgb(self):
-        p = Palette(self.zipped)
+        p = palette.Palette(self.zipped)
         self.assertEquals(p.rgb(0), self.colors[0])
         self.assertEquals(p.rgb(1), self.colors[1])
         self.assertRaises(IndexError, p.rgb, len(self.colors))
 
     def test_name(self):
-        p = Palette(self.zipped)
+        p = palette.Palette(self.zipped)
         self.assertEquals(p.name(0), self.names[0])
         self.assertEquals(p.name(1), self.names[1])
         self.assertRaises(IndexError, p.rgb, len(self.names))
 
     def test_iter(self):
-        self.assertEquals(list(Palette(self.zipped)), self.zipped)
+        self.assertEquals(list(palette.Palette(self.zipped)), self.zipped)
 
     def test_add(self):
         other_names = ["fu", "ba", "foo"]
         other_colors = [(1,2,3), (3,4,5), (4,5,6)]
-        other = Palette(zip(other_names, other_colors))
+        other = palette.Palette(zip(other_names, other_colors))
 
-        p = Palette(self.zipped)
+        p = palette.Palette(self.zipped)
         p += other
         self.assertEquals(p.names, ["foo", "bar", "fu", "ba"])
         self.assertEquals(p.colors, [(4,5,6), (0xb, 0xa, 2), (1,2,3), (3,4,5)])
 
-        q = Palette(self.zipped)
+        q = palette.Palette(self.zipped)
         r = q + other
         self.assertEquals(list(q), self.zipped)
         self.assertEquals(list(r), list(p))
 
     def test_len(self):
-        p = Palette(self.zipped)
+        p = palette.Palette(self.zipped)
         self.assertEquals(len(p), len(self.colors))
 
     def test_builtin(self):
-        self.assertEquals(len(colors8_dark), 8)
-        self.assertEquals(len(colors8_bright), 8)
-        self.assertEquals(len(colors16), 16)
+        self.assertEquals(len(palette.colors8_dark), 8)
+        self.assertEquals(len(palette.colors8_bright), 8)
+        self.assertEquals(len(palette.colors16), 16)
         # self.assertEquals(len(colors256), 256) TODO
 
     def test_find_index(self):
-        p = Palette(self.zipped)
+        p = palette.Palette(self.zipped)
         self.assertEquals(p.find_index("bar"), 1)
         self.assertEquals(p.find_index(self.colors[1]), 1)
 
@@ -89,32 +90,32 @@ class TestPalette(unittest.TestCase):
 
 class TestIndexedColor(unittest.TestCase):
     def test_ctor(self):
-        c = IndexedColor(2, colors8_dark)
+        c = IndexedColor(2, palette.colors8_dark)
         self.assertEquals(c.index, 2)
-        self.assertIs(c.palette, colors8_dark)
+        self.assertIs(c.palette, palette.colors8_dark)
 
-        c = IndexedColor("blue", colors8_dark)
+        c = IndexedColor("blue", palette.colors8_dark)
         self.assertEquals(c.index, 4)
-        self.assertIs(c.palette, colors8_dark)
+        self.assertIs(c.palette, palette.colors8_dark)
 
     def test_rgb(self):
         self.assertEquals(
-            IndexedColor(2, colors8_dark).rgb,
-            colors8_dark.rgb(2)
+            IndexedColor(2, palette.colors8_dark).rgb,
+            palette.colors8_dark.rgb(2)
         )
 
     def test_name(self):
         self.assertEquals(
-            IndexedColor(2, colors8_dark).name,
-            colors8_dark.name(2)
+            IndexedColor(2, palette.colors8_dark).name,
+            palette.colors8_dark.name(2)
         )
 
     def test_cmp(self):
-        a = IndexedColor(2, colors8_bright)
-        b = IndexedColor(2, colors8_bright)
-        c = IndexedColor(3, colors8_bright)
-        d = IndexedColor(2, colors8_dark)
-        e = IndexedColor(10, colors16)
+        a = IndexedColor(2, palette.colors8_bright)
+        b = IndexedColor(2, palette.colors8_bright)
+        c = IndexedColor(3, palette.colors8_bright)
+        d = IndexedColor(2, palette.colors8_dark)
+        e = IndexedColor(10, palette.colors16)
 
         self.assertTrue(a == b)
         self.assertFalse(a == c)
@@ -156,7 +157,7 @@ class TestRgbColor(unittest.TestCase):
         c = RgbColor(9, 2, 3)
         d = RgbColor(1, 9, 3)
         e = RgbColor(1, 2, 9)
-        p = Palette(
+        p = palette.Palette(
             ("a", (1,2,3)),
             ("b", (3,2,1)),
         )
