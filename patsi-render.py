@@ -142,6 +142,6 @@ except (RenderException, IOError) as e:
 except KeyError as e:
     sys.stderr.write("Unrecognized format: %s\n" % e)
     sys.exit(1)
-except Exception, e:
+except Exception as e:
     sys.stderr.write("Unexpected error\n")
     sys.exit(1)

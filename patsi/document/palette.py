@@ -16,6 +16,7 @@
 #
 import copy
 
+
 class Palette(object):
     def __init__(self, *args):
         if len(args) == 1:

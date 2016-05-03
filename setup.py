@@ -19,6 +19,7 @@
 import os
 from distutils.core import setup
 
+
 def get_packages(root):
     if type(root) is str:
         root = [root]
