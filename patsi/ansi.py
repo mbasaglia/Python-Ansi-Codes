@@ -427,6 +427,10 @@ class AnsiRenderer(object):
 
 
 class CharMover(object):
+    """
+    Translate space characters into position changes
+    """
+
     def __init__(self, start_x, start_y, tab_width=4):
         self.x = self.start_x = start_x
         self.y = self.start_y = start_y
@@ -434,11 +438,18 @@ class CharMover(object):
         self.moved = False
 
     def move(self, x, y, moved=True):
+        """
+        Changes the current position and "moved" status
+        """
         self.x = x
         self.y = y
         self.moved = moved or self.moved
 
     def loop(self, string):
+        """
+        Generator that parses the string and yields non-space characters.
+        Space characters cause x, y to change
+        """
         for ch in string:
             if ch == ' ':
                 self.x += 1
