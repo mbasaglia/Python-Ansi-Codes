@@ -76,6 +76,13 @@ function colorize()
     done
 }
 
+function fail()
+{
+    echo >&2
+    echo "$*" >&2
+    exit
+}
+
 cd "$SELFDIR/.."
 
 if [ \! -f activate ]
@@ -115,7 +122,9 @@ do
     case "$action" in
         run|test)
             rm -f .coverage
-            find test -type f -name '*.py' -exec coverage "${COVERAGE_RUN_FLAGS[@]}" {} \;
+            find test -type f -name '*.py' | \
+                xargs -n1 coverage "${COVERAGE_RUN_FLAGS[@]}" || \
+                fail "Some tests failed"
             ;;
         coverage)
             coverage "${COVERAGE_REPORT_FLAGS[@]}" | colorize
