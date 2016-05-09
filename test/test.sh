@@ -77,11 +77,18 @@ function colorize()
 }
 
 cd "$SELFDIR/.."
+
 if [ \! -f activate ]
 then
-    ./setup-env.py
+    ./setup-env.sh
 fi
+
 source activate
+
+if ! which coverage &>/dev/null
+then
+    pip install -r test/requirements-test.pip
+fi
 
 
 actions=()
