@@ -115,7 +115,16 @@ class TestFreeColorLayer(unittest.TestCase):
         self.assertEquals(l.matrix[(0, 0)], ("F", color_foo))
         self.assertEquals(l.matrix[(1, 0)], ("u", color_ubar))
         self.assertEquals(l.matrix[(2, 0)], ("n", color_fun))
-        # TODO finish this
+
+        other = FreeColorLayer()
+        other.set_char(3, 0, "!", color_foo)
+        l.add_layer(other)
+        self.assertEquals(l.matrix[(0, 0)], ("F", color_foo))
+        self.assertEquals(l.matrix[(1, 0)], ("u", color_ubar))
+        self.assertEquals(l.matrix[(2, 0)], ("n", color_fun))
+        self.assertEquals(l.matrix[(3, 0)], ("!", color_foo))
+
+        self.assertRaises(TypeError, lambda: l.add_layer(None))
 
 
 class TestDocument(unittest.TestCase):

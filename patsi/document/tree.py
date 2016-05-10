@@ -158,3 +158,5 @@ class FreeColorLayer(object):
                 self.set_char(mover.x, mover.y, ch, layer.color)
         elif isinstance(layer, FreeColorLayer):
             self.matrix.update(layer.matrix)
+        else:
+            raise TypeError("Expected Layer")
