@@ -409,20 +409,16 @@ class AnsiRenderer(object):
         overwrite existing characters, ANSI codes from the strings are preserved
         (They must be in the subset that AnsiCode can parse)
         """
-        x = start_x
-        y = start_y
+        mover = CharMover(start_x, start_y)
         for item in AnsiCode.split(string):
             if isinstance(item, AnsiCode):
                 self.ansi(item)
+                #TODO Handle movements
             else:
-                mover = CharMover(start_x, start_y)
-                mover.move(x, y, False)
-                for ch in mover.loop(string):
+                for ch in mover.loop(item):
                     if mover.moved:
-                        self.move_cursor(x, y)
+                        self.move_cursor(mover.x, mover.y)
                     self.output.write(ch)
-                x = mover.x
-                y = mover.y
         self.output.flush()
 
 

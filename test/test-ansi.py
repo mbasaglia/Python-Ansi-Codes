@@ -65,6 +65,7 @@ class TestAnsiCode(unittest.TestCase):
         self.assertTrue(isinstance(split[3], AnsiCode))
         self.assertTrue(isinstance(split[4], AnsiCode))
         self.assertEqual(split[5], "Foo")
+        self.assertEqual(list(AnsiCode.split("")), [])
 
     def test_compare(self):
         self.assertTrue(AnsiCode("m", ["1", "2", "3"]) ==
@@ -196,8 +197,11 @@ class TestGraphicRendition(unittest.TestCase):
         self.assertEqual(repr(a.flags[1]), "48;2;1;2;3")
 
     def test_ctor_color_invalid(self):
+        # TODO Is this the right behaviour or should it eat the mismatched flags?
         self.assertEquals(len(SGR([98, 5, 2, 3]).flags), 3)
         self.assertEquals(len(SGR([38, 2, 1]).flags), 2)
+        self.assertEquals(len(SGR([48, 2, 1]).flags), 2)
+        self.assertEquals(len(SGR([108, 2, 1]).flags), 2)
 
     def test_background(self):
         color = SGR.Red
@@ -352,8 +356,8 @@ class TestAnsiRenderer(unittest.TestCase):
         self.assertEquals(self.output.getvalue(), "Hello")
 
     def test_overlay(self):
-        # TODO
-        pass
+        self.renderer.overlay("abc\nd\x1b[31me")
+        self.assertEquals(self.output.getvalue(), "abc\x1b[2;1Hd\x1b[31me")
 
 
 unittest.main()
