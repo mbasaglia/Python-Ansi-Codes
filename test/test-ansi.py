@@ -17,6 +17,7 @@
 import sys
 import os
 import unittest
+from StringIO import StringIO
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from patsi.ansi import *
@@ -54,6 +55,7 @@ class TestAnsiCode(unittest.TestCase):
             a = AnsiCode.parse(test)
             self.assertTrue(isinstance(a, AnsiCode))
             self.assertEqual(repr(a), test)
+        self.assertRaises(Exception, lambda: AnsiCode.parse("Foo"))
 
     def test_split(self):
         split = list(AnsiCode.split("Hello\x1b[31mWorld\x1b[H\x1b[0mFoo"))
@@ -133,6 +135,7 @@ class TestGraphicRendition(unittest.TestCase):
         self.assertEqual(SGR().flags, [])
         self.assertEqual(SGR(1, 2, 3).flags, [1, 2, 3])
         self.assertEqual(SGR([1, 2, 3]).flags, [1, 2, 3])
+        self.assertEqual(SGR(1).flags, [1])
 
     def test_ctor_color(self):
         a = SGR([31, 42, 93, 104])
@@ -192,6 +195,10 @@ class TestGraphicRendition(unittest.TestCase):
         self.assertEqual(a.flags[1].background, True)
         self.assertEqual(repr(a.flags[1]), "48;2;1;2;3")
 
+    def test_ctor_color_invalid(self):
+        self.assertEquals(len(SGR([98, 5, 2, 3]).flags), 3)
+        self.assertEquals(len(SGR([38, 2, 1]).flags), 2)
+
     def test_background(self):
         color = SGR.Red
         bg = SGR.Background(color)
@@ -200,14 +207,20 @@ class TestGraphicRendition(unittest.TestCase):
         self.assertFalse(color.background)
 
     def test_reverse(self):
-        self.assertEqual(SGR.reverse(SGR.Bold), 22)
-        self.assertEqual(SGR.reverse(SGR.Italic), 23)
-        self.assertEqual(SGR.reverse(SGR.Underline), 24)
-        self.assertEqual(SGR.reverse(31), 39)
-        self.assertEqual(SGR.reverse(SGR.Red), 39)
-        self.assertEqual(SGR.reverse(91), 39)
-        self.assertEqual(SGR.reverse(SGR.Background(SGR.ColorRGB(1,2,3))), 49)
-        self.assertEqual(SGR.reverse(1234), 0)
+        reversible = [
+            (SGR.Bold, 22),
+            (SGR.Italic, 23),
+            (SGR.Underline, 24),
+        ]
+        for a, b in reversible:
+            self.assertEquals(SGR.reverse(a), b)
+            self.assertEquals(SGR.reverse(b), a)
+        self.assertEquals(SGR.reverse(41), 49)
+        self.assertEquals(SGR.reverse(31), 39)
+        self.assertEquals(SGR.reverse(SGR.Red), 39)
+        self.assertEquals(SGR.reverse(91), 39)
+        self.assertEquals(SGR.reverse(SGR.Background(SGR.ColorRGB(1,2,3))), 49)
+        self.assertEquals(SGR.reverse(1234), 0)
 
     def test_args(self):
         self.assertEqual(SGR([1, 2, 3]).args(), [1, 2, 3])
@@ -254,6 +267,93 @@ class TestCharMover(unittest.TestCase):
         self.assertEquals(next(gen), 'f')
         self.assertEquals((m.x, m.y), (2, 2))
         self.assertTrue(m.moved)
+
+
+class TestAnsiRenderer(unittest.TestCase):
+    def setUp(self):
+        self.output = StringIO()
+        self.renderer = AnsiRenderer(self.output)
+
+    def _get_data(self):
+        return self.output.getvalue()
+
+    def _clear_data(self):
+        self.output.truncate(0)
+        self.output.seek(0)
+
+    def _check_data(self, *args):
+        self.assertEquals(
+            self._get_data(),
+            "".join(repr(arg) for arg in args)
+        )
+
+    def test_ctor(self):
+        self.assertIs(self.renderer.output, self.output)
+
+    def test_context_nocursor(self):
+        with self.renderer.context_nocursor():
+            self._check_data(common.hide_cursor)
+            self._clear_data()
+        self._check_data(common.show_cursor)
+
+    def test_context_alt_screen(self):
+        with self.renderer.context_alt_screen():
+            self._check_data(common.alt_screen)
+            self._clear_data()
+        self._check_data(common.main_screen)
+
+    def test_context_sgr(self):
+        self.renderer.ansi(SGR(SGR.Bold))
+        with self.renderer.context_sgr(SGR.Underline):
+            self._check_data(SGR(SGR.Bold), SGR(SGR.Underline))
+        self._check_data(SGR(SGR.Bold), SGR(SGR.Underline), SGR(SGR.reverse(SGR.Underline)))
+
+        self._clear_data()
+        self.renderer.ansi(SGR(SGR.Bold))
+        with self.renderer.context_sgr(SGR.Underline, hard_reset=True):
+            self._check_data(SGR(SGR.Bold), SGR(SGR.Underline))
+        self._check_data(SGR(SGR.Bold), SGR(SGR.Underline), SGR(0))
+
+    def test_rendering_context(self):
+        with self.renderer.rendering_context():
+            self._check_data(common.alt_screen, common.hide_cursor,
+                             common.clear_screen, SGR(SGR.Reset))
+            self._clear_data()
+            raise KeyboardInterrupt
+        self._check_data(common.show_cursor, common.main_screen)
+
+    def test_keyboard_interrupt(self):
+        with keyboard_interrupt():
+            raise KeyboardInterrupt
+        self.assertTrue(True)
+
+    def test_ansi(self):
+        self.renderer.ansi(SGR(SGR.Bold))
+        self._check_data(SGR(SGR.Bold))
+
+        self._clear_data()
+        self.renderer.ansi("m", [1])
+        self._check_data(SGR(SGR.Bold))
+
+    def test_move_cursor(self):
+        self.renderer.move_cursor(2, 3)
+        self._check_data(CursorPosition(2, 3))
+
+        self._clear_data()
+        self.renderer.move_cursor()
+        self._check_data(CursorPosition())
+
+    def test_clear(self):
+        self.renderer.clear()
+        self._check_data(common.clear_screen)
+
+    def test_write(self):
+        self.renderer.write("Hello")
+        self.assertEquals(self.output.getvalue(), "Hello")
+
+    def test_overlay(self):
+        # TODO
+        pass
 
 
 unittest.main()
