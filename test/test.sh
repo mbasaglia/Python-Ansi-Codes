@@ -122,7 +122,7 @@ do
     case "$action" in
         run|test)
             rm -f .coverage
-            find test -type f -name '*.py' | \
+            find test -type f -name 'test-*.py' | \
                 xargs -n1 coverage "${COVERAGE_RUN_FLAGS[@]}" || \
                 fail "Some tests failed"
             ;;

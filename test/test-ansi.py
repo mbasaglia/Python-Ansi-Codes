@@ -14,16 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import sys
-import os
-import unittest
-from StringIO import StringIO
+import test_common
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from patsi.ansi import *
 
 
-class TestAnsiCode(unittest.TestCase):
+class TestAnsiCode(test_common.TestCase):
     def test_ctor(self):
         a = AnsiCode("m")
         self.assertEqual(a.terminator, "m")
@@ -81,7 +77,7 @@ class TestAnsiCode(unittest.TestCase):
                         AnsiCode.parse("\x1b[1;2;3m"))
 
 
-class TestCursorPosition(unittest.TestCase):
+class TestCursorPosition(test_common.TestCase):
     def test_parse(self):
         a = AnsiCode.parse("\x1b[3;4H")
         self.assertTrue(isinstance(a, CursorPosition))
@@ -119,7 +115,7 @@ class TestCursorPosition(unittest.TestCase):
         self.assertEqual(CursorPosition(row=3, column=4).args(), [3, 4])
 
 
-class TestGraphicRendition(unittest.TestCase):
+class TestGraphicRendition(test_common.TestCase):
     def test_alias(self):
         self.assertEqual(SGR, GraphicRendition)
 
@@ -233,7 +229,7 @@ class TestGraphicRendition(unittest.TestCase):
         pass
 
 
-class TestCharMover(unittest.TestCase):
+class TestCharMover(test_common.TestCase):
     def test_move(self):
         m = CharMover(0, 0)
         self.assertFalse(m.moved)
@@ -273,23 +269,10 @@ class TestCharMover(unittest.TestCase):
         self.assertTrue(m.moved)
 
 
-class TestAnsiRenderer(unittest.TestCase):
+class TestAnsiRenderer(test_common.StringOutputTestCase):
     def setUp(self):
-        self.output = StringIO()
+        super(TestAnsiRenderer, self).setUp()
         self.renderer = AnsiRenderer(self.output)
-
-    def _get_data(self):
-        return self.output.getvalue()
-
-    def _clear_data(self):
-        self.output.truncate(0)
-        self.output.seek(0)
-
-    def _check_data(self, *args):
-        self.assertEquals(
-            self._get_data(),
-            "".join(repr(arg) for arg in args)
-        )
 
     def test_ctor(self):
         self.assertIs(self.renderer.output, self.output)
@@ -360,4 +343,4 @@ class TestAnsiRenderer(unittest.TestCase):
         self.assertEquals(self.output.getvalue(), "abc\x1b[2;1Hd\x1b[31me")
 
 
-unittest.main()
+test_common.main()

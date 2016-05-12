@@ -14,17 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import sys
-import os
-import unittest
+import test_common
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from patsi.document.tree import *
 from patsi.document import color
 from patsi.document import _misc
 
 
-class TestLayer(unittest.TestCase):
+class TestLayer(test_common.TestCase):
     def test_empty(self):
         l = Layer()
         self.assertEquals(l.text, "")
@@ -71,7 +68,7 @@ class TestLayer(unittest.TestCase):
         self.assertEquals(l.height, 2)
 
 
-class TestFreeColorLayer(unittest.TestCase):
+class TestFreeColorLayer(test_common.TestCase):
     def test_empty(self):
         l = FreeColorLayer()
         self.assertFalse(l.matrix)
@@ -129,7 +126,7 @@ class TestFreeColorLayer(unittest.TestCase):
         self.assertRaises(TypeError, lambda: l.add_layer(None))
 
 
-class TestDocument(unittest.TestCase):
+class TestDocument(test_common.TestCase):
     def test_ctor(self):
         doc = Document()
         self.assertEquals(doc.name, "")
@@ -175,7 +172,7 @@ class TestDocument(unittest.TestCase):
         self.assertEquals(doc.height, 3)
 
 
-class TestMisc(unittest.TestCase):
+class TestMisc(test_common.TestCase):
     def test_basename(self):
         self.assertEquals(_misc.basename("foo"), "foo")
         self.assertEquals(_misc.basename("foo.bar"), "foo")
@@ -193,4 +190,4 @@ class TestMisc(unittest.TestCase):
 
 #TODO Test formatters
 
-unittest.main()
+test_common.main()

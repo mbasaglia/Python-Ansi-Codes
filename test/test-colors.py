@@ -14,16 +14,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import sys
-import os
-import unittest
+import test_common
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from patsi.document import palette
 from patsi.document.color import *
 
 
-class TestPalette(unittest.TestCase):
+class TestPalette(test_common.TestCase):
     names = ["foo", "bar"]
     colors = [(0xf, 0, 0), (0xb, 0xa, 2)]
     zipped = zip(names, colors)
@@ -89,7 +86,7 @@ class TestPalette(unittest.TestCase):
         self.assertRaises(Exception, p.find_index, "barr")
 
 
-class TestIndexedColor(unittest.TestCase):
+class TestIndexedColor(test_common.TestCase):
     def test_ctor(self):
         c = IndexedColor(2, palette.colors8_dark)
         self.assertEquals(c.index, 2)
@@ -135,7 +132,7 @@ class TestIndexedColor(unittest.TestCase):
         self.assertTrue(a != None)
 
 
-class TestRgbColor(unittest.TestCase):
+class TestRgbColor(test_common.TestCase):
     def test_hex_rgb(self):
         self.assertEquals(RgbColor(0xf1, 0x2, 0x34).hex(), "#f10234")
 
@@ -200,4 +197,4 @@ class TestRgbColor(unittest.TestCase):
         self.assertIsNot(color, copy)
 
 
-unittest.main()
+test_common.main()
