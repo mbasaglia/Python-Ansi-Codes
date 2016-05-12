@@ -17,6 +17,7 @@
 
 from . import factory
 from .. import tree
+from .. import color
 
 
 # TODO Color conversions
@@ -38,24 +39,24 @@ class IrcFormatter(object):
             for y in xrange(layer.height):
                 output.write("\x0301,01")
                 for x in xrange(layer.width):
-                    char, color = layer.matrix.get((x, y), (" ", tree.UnchangedColor))
-                    if color is not tree.UnchangedColor and color != prev_color:
-                        prev_color = color
-                        output.write(self.color(color))
+                    char, col = layer.matrix.get((x, y), (" ", color.UnchangedColor))
+                    if col is not color.UnchangedColor and col != prev_color:
+                        prev_color = col
+                        output.write(self.color(col))
                     output.write(char)
                 output.write("\n")
         else:
             raise TypeError("Expected layer type")
 
-    def color(self, color):
-        if color is None:
+    def color(self, col):
+        if col is None:
             return "\x0f"
-        elif isinstance(color, tree.IndexedColor):
-            if len(color.palette) == 8:
-                bright = 8 if getattr(color.palette, "bright", False) else 0
-                code = self.colors[color.index + bright]
-            elif len(color.palette) == 16:
-                code = self.colors[color.index]
+        elif isinstance(col, color.IndexedColor):
+            if len(col.palette) == 8:
+                bright = 8 if getattr(col.palette, "bright", False) else 0
+                code = self.colors[col.index + bright]
+            elif len(col.palette) == 16:
+                code = self.colors[col.index]
         else:
             raise TypeError("Expected document color")
 

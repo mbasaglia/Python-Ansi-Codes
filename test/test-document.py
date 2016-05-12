@@ -20,6 +20,8 @@ import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from patsi.document.tree import *
+from patsi.document import color
+from patsi.document import _misc
 
 
 class TestLayer(unittest.TestCase):
@@ -62,9 +64,9 @@ class TestLayer(unittest.TestCase):
         self.assertEquals(l.lines, ["foo", "Bar!"])
 
     def test_color(self):
-        l = Layer("foo\nBar!\n", RgbColor(1, 2, 3))
+        l = Layer("foo\nBar!\n", color.RgbColor(1, 2, 3))
         self.assertEquals(l.text, "foo\nBar!\n")
-        self.assertEquals(l.color, RgbColor(1, 2, 3))
+        self.assertEquals(l.color, color.RgbColor(1, 2, 3))
         self.assertEquals(l.width, 4)
         self.assertEquals(l.height, 2)
 
@@ -79,14 +81,14 @@ class TestFreeColorLayer(unittest.TestCase):
     def test_set_char(self):
         l = FreeColorLayer()
         self.assertFalse((4, 5) in l.matrix)
-        l.set_char(4, 5, "x", RgbColor(1, 2, 3))
+        l.set_char(4, 5, "x", color.RgbColor(1, 2, 3))
         self.assertTrue((4, 5) in l.matrix)
-        self.assertEquals(l.matrix[(4, 5)], ("x", RgbColor(1, 2, 3)))
+        self.assertEquals(l.matrix[(4, 5)], ("x", color.RgbColor(1, 2, 3)))
         self.assertEquals(l.width, 5)
         self.assertEquals(l.height, 6)
 
-        l.set_char(4, 5, "y", RgbColor(3, 2, 1))
-        self.assertEquals(l.matrix[(4, 5)], ("y", RgbColor(3, 2, 1)))
+        l.set_char(4, 5, "y", color.RgbColor(3, 2, 1))
+        self.assertEquals(l.matrix[(4, 5)], ("y", color.RgbColor(3, 2, 1)))
         self.assertEquals(l.width, 5)
         self.assertEquals(l.height, 6)
 
@@ -97,20 +99,20 @@ class TestFreeColorLayer(unittest.TestCase):
 
     def test_add_layer(self):
         l = FreeColorLayer()
-        color_foo = RgbColor(0xf, 0, 0)
+        color_foo = color.RgbColor(0xf, 0, 0)
         l.add_layer(Layer("Foo", color_foo))
         self.assertEquals(l.matrix[(0, 0)], ("F", color_foo))
         self.assertEquals(l.matrix[(1, 0)], ("o", color_foo))
         self.assertEquals(l.matrix[(2, 0)], ("o", color_foo))
 
-        color_ubar = RgbColor(0xb, 0xa, 0x2)
+        color_ubar = color.RgbColor(0xb, 0xa, 0x2)
         l.add_layer(Layer(" u\n b\n a\n r", color_ubar))
         self.assertEquals(l.matrix[(0, 0)], ("F", color_foo))
         self.assertEquals(l.matrix[(1, 0)], ("u", color_ubar))
         self.assertEquals(l.matrix[(2, 0)], ("o", color_foo))
         self.assertEquals(l.matrix[(1, 1)], ("b", color_ubar))
 
-        color_fun = RgbColor(0xf, 0xa, 0xf)
+        color_fun = color.RgbColor(0xf, 0xa, 0xf)
         l.add_layer(Layer("  n\n", color_fun))
         self.assertEquals(l.matrix[(0, 0)], ("F", color_foo))
         self.assertEquals(l.matrix[(1, 0)], ("u", color_ubar))
@@ -150,17 +152,17 @@ class TestDocument(unittest.TestCase):
         self.assertIsInstance(layer, Layer)
         self.assertEquals(layer.text, "")
 
-        doc.layers.append(Layer("Foo\n", RgbColor(1, 2, 3)))
+        doc.layers.append(Layer("Foo\n", color.RgbColor(1, 2, 3)))
         layer = doc.flattened()
         self.assertIsInstance(layer, Layer)
         self.assertEquals(layer.text, "Foo\n")
         self.assertEquals(layer.color, doc.layers[0].color)
 
-        doc.layers.append(Layer("\nbar\n", RgbColor(3, 2, 1)))
+        doc.layers.append(Layer("\nbar\n", color.RgbColor(3, 2, 1)))
         layer = doc.flattened()
         self.assertIsInstance(layer, FreeColorLayer)
-        self.assertEquals(layer.matrix[(0, 0)], ("F", RgbColor(1, 2, 3)))
-        self.assertEquals(layer.matrix[(0, 1)], ("b", RgbColor(3, 2, 1)))
+        self.assertEquals(layer.matrix[(0, 0)], ("F", color.RgbColor(1, 2, 3)))
+        self.assertEquals(layer.matrix[(0, 1)], ("b", color.RgbColor(3, 2, 1)))
 
         doc2 = doc.flattened_doc()
         self.assertEquals(len(doc2.layers), 1)
@@ -172,6 +174,21 @@ class TestDocument(unittest.TestCase):
         self.assertEquals(doc.width, 5)
         self.assertEquals(doc.height, 3)
 
+
+class TestMisc(unittest.TestCase):
+    def test_basename(self):
+        self.assertEquals(_misc.basename("foo"), "foo")
+        self.assertEquals(_misc.basename("foo.bar"), "foo")
+        self.assertEquals(_misc.basename("hello/foo.bar"), "foo")
+        self.assertEquals(_misc.basename("hello/foo.b.a.r"), "foo")
+        self.assertEquals(_misc.basename("hello.world/foo.bar"), "foo")
+
+    def test_extension(self):
+        self.assertEquals(_misc.extension("foo"), "")
+        self.assertEquals(_misc.extension("foo.bar"), "bar")
+        self.assertEquals(_misc.extension("hello/foo.bar"), "bar")
+        self.assertEquals(_misc.extension("hello/foo.b.a.r"), "b.a.r")
+        self.assertEquals(_misc.extension("hello.world/foo.bar"), "bar")
 
 
 #TODO Test formatters

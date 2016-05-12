@@ -18,61 +18,6 @@ import copy
 from ..ansi import CharMover
 
 
-class IndexedColor(object):
-    def __init__(self, color, palette):
-        if type(color) is str:
-            self.index = palette.find_index(color)
-        else:
-            self.index = color
-
-        self.palette = palette
-
-    @property
-    def rgb(self):
-        return self.palette.rgb(self.index)
-
-    @property
-    def name(self):
-        return self.palette.name(self.index)
-
-    def __eq__(self, oth):
-        return oth is not None and self.rgb == oth.rgb
-
-    def __ne__(self, oth):
-        return not (self == oth)
-
-
-def hex_rgb(rgb):
-    return '#%02x%02x%02x' % rgb
-
-
-class RgbColor(object):
-    def __init__(self, r, g, b, name=None):
-        self.r = r
-        self.g = g
-        self.b = b
-        self._name = name
-
-    @property
-    def rgb(self):
-        return (self.r, self.g, self.b)
-
-    @property
-    def name(self):
-        return self._name if self._name is not None else hex_rgb(self.rgb)
-
-    def __eq__(self, oth):
-        return oth is not None and self.rgb == oth.rgb
-
-    def __ne__(self, oth):
-        return not (self == oth)
-
-
-class UnchangedColorType(object):
-    pass
-UnchangedColor = UnchangedColorType()
-
-
 class Document(object):
     def __init__(self, name="", layers=[], metadata={}):
         self.name = name

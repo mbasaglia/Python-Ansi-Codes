@@ -18,16 +18,16 @@
 import os
 import sys
 import argparse
-from patsi.document import tree, formatter, loader, _misc
+from patsi.document import tree, formatter, loader, _misc, color, palette
 
 
 def load_dir(path):
     doc = tree.Document(_misc.basename(path))
     for file in os.listdir(path):
-        if file in tree.colors16.names:
+        if file in palette.colors16.names:
             doc.layers.append(tree.Layer(
                 open(os.path.join(path, file)).read(),
-                tree.IndexedColor(file, tree.colors16)
+                color.IndexedColor(file, palette.colors16)
             ))
     return doc
 
@@ -35,6 +35,13 @@ def load_dir(path):
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Renders an patsi document."
+    )
+
+    parser.add_argument(
+        "--debug",
+        help="Enable debugging",
+        action="store_true",
+        default=False,
     )
 
     parser.add_argument(
@@ -82,14 +89,11 @@ class RenderException(Exception):
     pass
 
 
-def main():
-    args = parse_args()
-
-    def uses_stdin():
-        return args.input == "-" or not args.input
+def run(args):
+    uses_stdin = args.input == "-" or not args.input
 
     # Load the document
-    if uses_stdin():
+    if uses_stdin:
         if args.input_format == "ansi_dir":
             raise RenderException("You must pass a path to open an ANSI directory")
         elif args.input_format == "auto":
@@ -111,12 +115,12 @@ def main():
 
         if args.output_directory is not None:
             dirname = args.output_directory
-        elif uses_stdin():
+        elif uses_stdin:
             dirname = os.getcwd()
         else:
             dirname = os.path.dirname(args.input)
 
-        if uses_stdin():
+        if uses_stdin:
             basename = "stdin" if not doc.name else doc.name
         else:
             basename = _misc.basename(args.input)
@@ -134,14 +138,32 @@ def main():
     formatter.factory.save(doc, out, hint)
 
 
-try:
-    main()
-except (RenderException, IOError) as e:
-    sys.stderr.write("%s\n" % e)
-    sys.exit(1)
-except KeyError as e:
-    sys.stderr.write("Unrecognized format: %s\n" % e)
-    sys.exit(1)
-except Exception as e:
-    sys.stderr.write("Unexpected error\n")
-    sys.exit(1)
+def main():
+    args = parse_args()
+    with ExceptionManager(args.debug):
+        run(args)
+
+
+class ExceptionManager(object):
+    def __init__(self, debug=False):
+        self.debug = debug
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc, traceback):
+        if self.debug or exc is None:
+            return
+        if isinstance(exc, RenderException) or isinstance(exc, IOError):
+            self._error(exc)
+        elif isinstance(exc, KeyError):
+            self._error("Unrecognized format: %s" % exc)
+        else:
+            self._error("Unexpected error")
+
+    def _error(self, msg):
+        sys.stderr.write(str(msg) + "\n")
+        sys.exit(1)
+
+
+main()

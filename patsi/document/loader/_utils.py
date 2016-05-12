@@ -15,7 +15,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import re
-from .. import tree
+from .. import color
+from .. import palette
 
 
 _rgb_color_regex = re.compile("^#[0-9a-fA-F]{6}$")
@@ -25,9 +26,9 @@ def string_to_color(color):
     if not color:
         return None
     if _rgb_color_regex.match(color):
-        return tree.RgbColor(color[1:3], color[3:5], color[5:7])
-    if color in tree.colors16.names:
-        return tree.IndexedColor(str(color), tree.colors16)
-    if color in tree.colors256.names:
-        return tree.IndexedColor(str(color), tree.colors256)
+        return color.RgbColor(color[1:3], color[3:5], color[5:7])
+    if color in palette.colors16.names:
+        return color.IndexedColor(str(color), palette.colors16)
+    if color in palette.colors256.names:
+        return color.IndexedColor(str(color), palette.colors256)
     return None

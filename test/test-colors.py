@@ -20,7 +20,7 @@ import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from patsi.document import palette
-from patsi.document.tree import *
+from patsi.document.color import *
 
 
 class TestPalette(unittest.TestCase):
@@ -79,7 +79,7 @@ class TestPalette(unittest.TestCase):
         self.assertEquals(len(palette.colors8_dark), 8)
         self.assertEquals(len(palette.colors8_bright), 8)
         self.assertEquals(len(palette.colors16), 16)
-        # self.assertEquals(len(colors256), 256) TODO
+        self.assertEquals(len(palette.colors256), 256)
 
     def test_find_index(self):
         p = palette.Palette(self.zipped)
@@ -100,10 +100,14 @@ class TestIndexedColor(unittest.TestCase):
         self.assertIs(c.palette, palette.colors8_dark)
 
     def test_rgb(self):
-        self.assertEquals(
-            IndexedColor(2, palette.colors8_dark).rgb,
-            palette.colors8_dark.rgb(2)
-        )
+        color = IndexedColor(2, palette.colors8_dark)
+        self.assertIs(type(color.rgb), RgbColor)
+        self.assertEquals(color.rgb, palette.colors8_dark.rgb(2))
+
+    def test_rgb_tuple(self):
+        color = IndexedColor(2, palette.colors8_dark)
+        self.assertIs(type(color.rgb_tuple), tuple)
+        self.assertEquals(color.rgb_tuple, palette.colors8_dark.rgb_tuple(2))
 
     def test_name(self):
         self.assertEquals(
@@ -132,8 +136,8 @@ class TestIndexedColor(unittest.TestCase):
 
 
 class TestRgbColor(unittest.TestCase):
-    def test_helpers(self):
-        self.assertEquals(hex_rgb((0xf1, 0x2, 0x34)), "#f10234")
+    def test_hex_rgb(self):
+        self.assertEquals(RgbColor(0xf1, 0x2, 0x34).hex(), "#f10234")
 
     def test_ctor(self):
         c = RgbColor(1, 2, 3)
@@ -143,14 +147,21 @@ class TestRgbColor(unittest.TestCase):
 
     def test_rgb(self):
         c = RgbColor(1, 2, 3)
-        self.assertEquals(c.rgb, (1, 2, 3))
+        self.assertIs(type(c.rgb), RgbColor)
+        self.assertEquals(c.rgb, c)
+
+    def test_rgb_tuple(self):
+        c = RgbColor(1, 2, 3)
+        self.assertIs(type(c.rgb_tuple), tuple)
+        self.assertEquals(c.rgb_tuple, (1, 2, 3))
 
     def test_name(self):
         c = RgbColor(1, 2, 3)
-        self.assertEquals(c.name, hex_rgb(c.rgb))
-
-        c = RgbColor(1, 2, 3, "foocolor")
+        self.assertEquals(c.name, c.hex())
+        c.name = "foocolor"
         self.assertEquals(c.name, "foocolor")
+        del c.name
+        self.assertEquals(c.name, c.hex())
 
     def test_cmp(self):
         a = RgbColor(1, 2, 3)
@@ -180,6 +191,13 @@ class TestRgbColor(unittest.TestCase):
         self.assertFalse(a != f)
         self.assertTrue(a != g)
         self.assertTrue(a != None)
+
+    def test_copy(self):
+        color = RgbColor(1, 2, 3, "foocolor")
+        copy = color.copy()
+        self.assertEquals(color, copy)
+        self.assertEquals(color.name, copy.name)
+        self.assertIsNot(color, copy)
 
 
 unittest.main()

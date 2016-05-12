@@ -19,6 +19,7 @@ from xml.sax.saxutils import escape
 
 from . import factory
 from .. import tree
+from .. import color
 from .. import palette
 
 
@@ -27,8 +28,8 @@ class SvgFormatter(object):
     def __init__(
             self,
             flatten=False,
-            background=tree.IndexedColor(0, palette.colors8_dark),
-            text_color=tree.IndexedColor(7, palette.colors8_dark),
+            background=color.IndexedColor(0, palette.colors8_dark),
+            text_color=color.IndexedColor(7, palette.colors8_dark),
             font_size=12):
         self.flat = flatten
         self.background = background
@@ -87,9 +88,9 @@ class SvgFormatter(object):
             output.write(open_rect())
             prev_color = None
             for pos, item in layer.matrix.iteritems():
-                char, color = item
-                if color is not tree.UnchangedColor and color != prev_color:
-                    prev_color = color
+                char, col = item
+                if col is not color.UnchangedColor and col != prev_color:
+                    prev_color = col
                 output.write("<tspan x='{x}' y='{y}' style='fill:{color};'>{char}</tspan>\n".format(
                     x=pos[0] * self.font_width,
                     y=pos[1] * self.font_size,
@@ -104,7 +105,7 @@ class SvgFormatter(object):
     def color(self, color):
         if color is None:
             return "inherit"
-        return tree.hex_rgb(color.rgb)
+        return color.rgb.hex()
 
 
 factory.register(SvgFormatter(), "svg")

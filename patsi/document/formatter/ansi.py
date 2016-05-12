@@ -16,6 +16,7 @@
 #
 from . import factory
 from .. import tree
+from .. import color
 from ...ansi import SGR
 
 
@@ -33,30 +34,30 @@ class AnsiFormatter(object):
             prev_color = None
             for y in xrange(layer.height):
                 for x in xrange(layer.width):
-                    char, color = layer.matrix.get((x, y), (" ", tree.UnchangedColor))
-                    if color is not tree.UnchangedColor and color != prev_color:
-                        prev_color = color
-                        output.write(self.color(color))
+                    char, col = layer.matrix.get((x, y), (" ", color.UnchangedColor))
+                    if col is not color.UnchangedColor and col != prev_color:
+                        prev_color = col
+                        output.write(self.color(col))
                     output.write(char)
                 output.write("\n")
         else:
             raise TypeError("Expected layer type")
 
-    def color(self, color):
-        if color is None:
+    def color(self, c):
+        if c is None:
             ansi_color = SGR.ResetColor
-        elif isinstance(color, tree.RgbColor):
-            ansi_color = SGR.ColorRGB(color.r, color.g, color.b)
-        elif isinstance(color, tree.IndexedColor):
-            if len(color.palette) == 8:
-                bright = getattr(color.palette, "bright", False)
-                ansi_color = SGR.Color(color.index, False, bright)
-            elif len(color.palette) == 16:
-                ansi_color = SGR.Color(color.index & 7, False, color.index > 7)
+        elif isinstance(c, color.RgbColor):
+            ansi_color = SGR.ColorRGB(c.r, c.g, c.b)
+        elif isinstance(c, color.IndexedColor):
+            if len(c.palette) == 8:
+                bright = getattr(c.palette, "bright", False)
+                ansi_color = SGR.Color(c.index, False, bright)
+            elif len(c.palette) == 16:
+                ansi_color = SGR.Color(c.index & 7, False, c.index > 7)
             else:
-                ansi_color = SGR.Color256(color.index)
-        elif type(color) is tuple and len(color) == 3:
-            ansi_color = SGR.ColorRGB(*color)
+                ansi_color = SGR.Color256(c.index)
+        elif type(c) is tuple and len(c) == 3:
+            ansi_color = SGR.ColorRGB(*c)
         else:
             raise TypeError("Expected document color")
 

@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import copy
+from . import color
 
 
 class Palette(object):
@@ -27,11 +28,19 @@ class Palette(object):
         self.names = [color[0] for color in colors]
         self.colors = [color[1] for color in colors]
 
-    def rgb(self, index):
+    def rgb_tuple(self, index):
         return self.colors[index]
 
     def name(self, index):
         return self.names[index]
+
+    def rgb(self, index):
+        return color.RgbColor(
+            self.colors[index][0],
+            self.colors[index][1],
+            self.colors[index][2],
+            self.names[index]
+        )
 
     def find_index(self, value):
         if type(value) is tuple:
