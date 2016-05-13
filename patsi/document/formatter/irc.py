@@ -37,7 +37,6 @@ class IrcFormatter(object):
         elif isinstance(layer, tree.FreeColorLayer):
             prev_color = None
             for y in xrange(layer.height):
-                output.write("\x0301,01")
                 for x in xrange(layer.width):
                     char, col = layer.matrix.get((x, y), (" ", color.UnchangedColor))
                     if col is not color.UnchangedColor and col != prev_color:
@@ -57,6 +56,10 @@ class IrcFormatter(object):
                 code = self.colors[col.index + bright]
             elif len(col.palette) == 16:
                 code = self.colors[col.index]
+            else:
+                raise NotImplementedError() # TODO convert 256 colors
+        elif isinstance(col, color.RgbColor):
+            raise NotImplementedError() # TODO convert RGB colors
         else:
             raise TypeError("Expected document color")
 

@@ -58,8 +58,11 @@ class AnsiSourceFormatter(object):
         self._wrap_ansi(self._ansi_formatter.layer, layer, output)
 
     def color(self, color):
-        return self.prefix + self._replace(self._ansi_formatter(color)) + \
+        return (
+            self.prefix +
+            self._replace(self._ansi_formatter.color(color))  +
             self.suffix
+        )
 
 AnsiSourceFormatter.builtins = {
     "bash": AnsiSourceFormatter(

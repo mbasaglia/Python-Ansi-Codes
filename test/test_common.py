@@ -39,8 +39,38 @@ class StringOutputTestCase(unittest.TestCase):
     def _check_data(self, *args):
         self.assertEquals(
             self._get_data(),
-            "".join(repr(arg) for arg in args)
+            "".join(str(arg) for arg in args)
         )
+
+
+class MockFile(object):
+    def __init__(self, wrapped=StringIO()):
+        self._wrapped = wrapped
+
+    def __getattr__(self, name):
+        if name != "_wrapped" and name not in vars(self):
+            return getattr(self._wrapped, name)
+        return super(MockFile, self).__getattr__(name)
+
+    def __delattr__(self, name):
+        if name != "_wrapped" and name not in vars(self):
+            return delattr(self._wrapped, name)
+
+    def __setattr__(self, name, value):
+        if name != "_wrapped" and name not in vars(self):
+            return setattr(self._wrapped, name, value)
+        return super(MockFile, self).__setattr__(name, value)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+    def open(self, file, mode):
+        self.name = file
+        self.mode = mode
+        return self
 
 
 def main():

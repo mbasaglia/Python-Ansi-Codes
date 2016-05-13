@@ -90,7 +90,7 @@ colors8_bright = Palette(
     ("cyan",     (84, 255, 255)),
     ("white",    (255, 255, 255))
 )
-colors8_bright.brigth = True
+colors8_bright.bright = True
 
 colors16 = colors8_dark + Palette(
     ("%s_bright" % name, value)
