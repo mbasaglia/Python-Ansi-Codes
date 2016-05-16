@@ -97,7 +97,7 @@ colors16 = colors8_dark + Palette(
     for name, value in colors8_bright
 )
 
-colors256 = {
+colors256 = Palette([
     ("Black", (0, 0, 0)),
     ("Maroon", (128, 0, 0)),
     ("Green", (0, 0, 128)),
@@ -354,4 +354,4 @@ colors256 = {
     ("Grey85", (218, 218, 218)),
     ("Grey89", (228, 228, 228)),
     ("Grey93", (238, 238, 238)),
-}
+])

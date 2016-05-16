@@ -56,8 +56,6 @@ class AnsiFormatter(object):
                 ansi_color = SGR.Color(c.index & 7, False, c.index > 7)
             else:
                 ansi_color = SGR.Color256(c.index)
-        elif type(c) is tuple and len(c) == 3:
-            ansi_color = SGR.ColorRGB(*c)
         else:
             raise TypeError("Expected document color")
 

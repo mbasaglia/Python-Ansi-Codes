@@ -76,7 +76,7 @@ class JsonFormatter(object):
         json.dump(self.layer_dict(layer), output, **self._json_args())
 
     def color(self, color):
-        json.dumps(self.color_dict(color), **self._json_args())
+        return json.dumps(self.color_dict(color), **self._json_args())
 
 
 factory.register(JsonFormatter(), "json")

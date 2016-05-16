@@ -23,7 +23,7 @@ from .json import JsonFormatter
 from .xml import XmlFormatter
 try:
     from .png import PngFormatter
-except ImportError:
+except ImportError: # pragma: no cover
     pass
 
 from . import factory

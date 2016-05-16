@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import json
 from mock import patch
 import test_common
 
@@ -85,9 +86,6 @@ class TestFactory(test_common.StringOutputTestCase):
         self._check_data("Hello\n")
 
 
-    # TODO Test register()
-
-
 class TestAnsiFormatter(test_common.StringOutputTestCase):
     fmt = formatter.AnsiFormatter()
 
@@ -105,7 +103,6 @@ class TestAnsiFormatter(test_common.StringOutputTestCase):
             (color.IndexedColor(9, palette.colors16),
                 ansi.SGR.Color(ansi.SGR.Color.Red, bright=True)),
             (color.IndexedColor(9, palette.colors256), ansi.SGR.Color256(9)),
-            ((1, 2, 3), ansi.SGR.ColorRGB(1, 2, 3)),
         ]
 
         for doc_col, sgr_col in colors:
@@ -198,7 +195,6 @@ class TestTextFormatter(test_common.StringOutputTestCase):
             (color.IndexedColor(9, palette.colors16),
                 ansi.SGR.Color(ansi.SGR.Color.Red, bright=True)),
             (color.IndexedColor(9, palette.colors256), ansi.SGR.Color256(9)),
-            ((1, 2, 3), ansi.SGR.ColorRGB(1, 2, 3)),
         ]
 
         for doc_col, sgr_col in colors:
@@ -247,6 +243,9 @@ class TestIrcFormatter(test_common.StringOutputTestCase):
         self.assertTrue(self.fmt.flat)
 
     def test_color(self):
+        self.assertRaises(NotImplementedError, lambda: self.fmt.color(color.RgbColor(1, 2, 255)))
+        self.assertRaises(NotImplementedError, lambda: self.fmt.color(color.IndexedColor(9, palette.colors256)))
+
         colors = [
             #(color.RgbColor(1, 2, 255), self.irc_colors[8+2]),
             (color.IndexedColor(1, palette.colors8_dark), self.irc_colors[1]),
@@ -302,5 +301,89 @@ class TestIrcFormatter(test_common.StringOutputTestCase):
         self.fmt.document(doc, self.output)
         self._check_data(self.fmt.color(red), "Hello\n",
                          self.fmt.color(blue), "World\n")
+
+
+class TestJsonFormatter(test_common.StringOutputTestCase):
+    fmt = formatter.JsonFormatter()
+    maxDiff = None
+
+    def test_flat(self):
+        self.assertFalse(self.fmt.flat)
+
+    def test_color(self):
+        colors = [
+            (None, ""),
+            (color.RgbColor(1, 2, 3), "#010203"),
+            (color.IndexedColor(1, palette.colors8_dark), "red"),
+            (color.IndexedColor(1, palette.colors8_bright), "red"),
+            (color.IndexedColor(1, palette.colors16), "red"),
+            (color.IndexedColor(9, palette.colors16), "red_bright"),
+            (color.IndexedColor(9, palette.colors256), palette.colors256.name(9)),
+        ]
+
+        for doc_col, name in colors:
+            self.assertEquals(self.fmt.color(doc_col), '"%s"' % name)
+
+        self.assertRaises(Exception, lambda: self.fmt.color(69))
+
+    def test_layer(self):
+        red = color.IndexedColor(1, palette.colors16)
+        blue = color.IndexedColor(4, palette.colors16)
+        layer = tree.Layer("Hello World", red)
+        self.fmt.layer(layer, self.output)
+        self.assertDictEqual(
+            json.loads(self._get_data()),
+            {"color": red.name, "text": layer.text}
+        )
+        self._clear_data()
+
+        layer = tree.FreeColorLayer()
+        layer.set_char(0, 0, "H", red)
+        layer.set_char(1, 0, "e", red)
+        layer.set_char(2, 0, "l", red)
+        layer.set_char(3, 0, "l", red)
+        layer.set_char(4, 0, "o", blue)
+        layer.set_char(5, 0, "!", blue)
+        self.fmt.layer(layer, self.output)
+        self.assertDictEqual(
+            json.loads(self._get_data()),
+            {"chars": [
+                {"x": 0, "y": 0, "char": "H", "color": "red"},
+                {"x": 1, "y": 0, "char": "e", "color": "red"},
+                {"x": 2, "y": 0, "char": "l", "color": "red"},
+                {"x": 3, "y": 0, "char": "l", "color": "red"},
+                {"x": 4, "y": 0, "char": "o", "color": "blue"},
+                {"x": 5, "y": 0, "char": "!", "color": "blue"},
+            ]}
+        )
+        self._clear_data()
+
+        layer = None
+        self.assertRaises(TypeError, lambda: self.fmt.layer(layer, self.output))
+        self._check_data("")
+
+    def test_document(self):
+        metadata = {"hello": "world"}
+        doc = tree.Document(
+            "test",
+            [
+                tree.Layer("Hello", color.IndexedColor(1, palette.colors16)),
+                tree.Layer("\nWorld", color.IndexedColor(4, palette.colors16)),
+            ],
+            metadata
+        )
+        self.fmt.document(doc, self.output)
+        self.assertDictEqual(
+            json.loads(self._get_data()),
+            {
+                "layers": [
+                    {"color": "red", "text": "Hello\n"},
+                    {"color": "blue", "text": "\nWorld\n"},
+                ],
+                "name": "test",
+                "metadata": metadata,
+            }
+        )
+
 
 test_common.main()
