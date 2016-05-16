@@ -17,10 +17,13 @@
 #
 
 SELFDIR=$(dirname $(readlink -se "${BASH_SOURCE[0]}"))
+SOURCES="$SELFDIR/../patsi"
+TESTS="$SELFDIR"
+VIRTUALENV_PARENT_DIR="$SELFDIR"
 
 COVERAGE_RUN_FLAGS=(
     run
-    --source=patsi
+    --source="$SOURCES"
     --branch
     --append
 )
@@ -28,6 +31,13 @@ COVERAGE_RUN_FLAGS=(
 COVERAGE_REPORT_FLAGS=(
     report
     -m
+)
+
+FIND_FLAGS=(
+    "$TESTS"
+    -type f
+    -name '*.py'
+    -not -path '*/.env/*'
 )
 
 if [ -t 1 ]
@@ -57,7 +67,7 @@ function pccolor()
     else
         color="31"
     fi
-    echo -e "\x1b[1;${color}m"
+    echo -e "\x1b[${color}m"
 }
 
 function colorize()
@@ -83,8 +93,7 @@ function fail()
     exit
 }
 
-cd "$SELFDIR/.."
-
+cd "$VIRTUALENV_PARENT_DIR"
 if [ \! -f activate ]
 then
     ./setup-env.sh
@@ -120,13 +129,19 @@ done
 for action in "${actions[@]}"
 do
     case "$action" in
+        debug)
+            rm -f *.pyc
+            PYTHONPATH="$SOURCES" find "${FIND_FLAGS[@]}" -exec python {} \;
+            ;;
         run|test)
+            cd "$SOURCES"
             rm -f .coverage
-            find test -type f -name 'test-*.py' | \
+            find "${FIND_FLAGS[@]}" | \
                 xargs -n1 coverage "${COVERAGE_RUN_FLAGS[@]}" || \
                 fail "Some tests failed"
             ;;
         coverage)
+            cd "$SOURCES"
             coverage "${COVERAGE_REPORT_FLAGS[@]}" | colorize
             ;;
     esac
