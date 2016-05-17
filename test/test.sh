@@ -19,7 +19,7 @@
 SELFDIR=$(dirname $(readlink -se "${BASH_SOURCE[0]}"))
 SOURCES="$SELFDIR/../patsi"
 TESTS="$SELFDIR"
-VIRTUALENV_PARENT_DIR="$SELFDIR"
+VIRTUALENV_PARENT_DIR="$SELFDIR/.."
 
 COVERAGE_RUN_FLAGS=(
     run
@@ -57,17 +57,17 @@ function pccolor()
         return
     elif [ "$percent" -eq 100 ]
     then
-        color="34"
+        color="4"
     elif [ "$percent" -gt 70 ]
     then
-        color="32"
+        color="2"
     elif [ "$percent" -gt 40 ]
     then
-        color="33"
+        color="3"
     else
-        color="31"
+        color="1"
     fi
-    echo -e "\x1b[${color}m"
+    echo -e "\x1b[9${color}m"
 }
 
 function colorize()
