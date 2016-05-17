@@ -34,7 +34,7 @@ class PngFormatter(object):
         cairosvg.svg2png(bytestring=buffer.getvalue(), write_to=output)
 
     def layer(self, layer, output):
-        doc = tree.Document
+        doc = tree.Document()
         doc.layers.append(layer)
         self.document(doc, output)
 

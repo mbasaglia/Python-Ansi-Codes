@@ -253,7 +253,6 @@ class TestIrcFormatter(test_common.StringOutputTestCase):
             (color.IndexedColor(1, palette.colors16), self.irc_colors[1]),
             (color.IndexedColor(9, palette.colors16), self.irc_colors[8+1]),
             #(color.IndexedColor(9, palette.colors256), ???),
-            #((1, 2, 255), self.irc_colors[8+2]),
         ]
 
         for doc_col, irc_col in colors:
@@ -384,6 +383,67 @@ class TestJsonFormatter(test_common.StringOutputTestCase):
                 "metadata": metadata,
             }
         )
+
+
+class TestPngFormatter(test_common.StringOutputTestCase):
+    fmt = formatter.PngFormatter()
+
+    def test_flat(self):
+        self.assertTrue(self.fmt.flat)
+
+    def test_color(self):
+        colors = [
+            None,
+            color.RgbColor(1, 2, 255),
+            color.IndexedColor(1, palette.colors8_dark),
+            color.IndexedColor(1, palette.colors8_bright),
+            color.IndexedColor(1, palette.colors16),
+            color.IndexedColor(9, palette.colors16),
+            color.IndexedColor(9, palette.colors256),
+        ]
+
+        for doc_col in colors:
+            self.assertEquals(self.fmt.color(doc_col), "")
+
+    def _check_png_header(self):
+        return self._get_data().startswith("PNG")
+
+    def test_layer(self):
+        red = color.IndexedColor(1, palette.colors16)
+        blue = color.IndexedColor(4, palette.colors16)
+        layer = tree.Layer("Hello World", red)
+        self.fmt.layer(layer, self.output)
+        self._check_png_header()
+
+        layer = tree.FreeColorLayer()
+        layer.set_char(0, 0, "H", red)
+        layer.set_char(1, 0, "e", red)
+        layer.set_char(2, 0, "l", red)
+        layer.set_char(3, 0, "l", red)
+        layer.set_char(4, 0, "o", blue)
+        layer.set_char(5, 0, "!", blue)
+        self._clear_data()
+        self.fmt.layer(layer, self.output)
+        self._check_png_header()
+
+        layer = None
+        self._clear_data()
+        self.assertRaises(Exception, lambda: self.fmt.layer(layer, self.output))
+        self._check_data("")
+
+    def test_document(self):
+        red = color.IndexedColor(1, palette.colors16)
+        blue = color.IndexedColor(4, palette.colors16)
+
+        doc = tree.Document(
+            "test",
+            [
+                tree.Layer("Hello", red),
+                tree.Layer("\nWorld", blue),
+            ],
+        )
+        self.fmt.document(doc, self.output)
+        self._check_png_header()
 
 
 test_common.main()
