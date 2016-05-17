@@ -25,6 +25,7 @@ from patsi.document import palette
 from patsi.document import formatter
 from patsi.document.formatter import factory
 
+
 class TestFactory(test_common.StringOutputTestCase):
     formatters = {
         "ansi": formatter.AnsiFormatter,

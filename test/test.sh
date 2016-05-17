@@ -108,10 +108,12 @@ fi
 
 
 actions=()
+extra_args=()
+files=()
 while [ "$1" ]
 do
     case "$1" in
-        run|test|coverage)
+        run|test|coverage|debug)
             actions+=("$1")
             ;;
         --color|--colour)
@@ -120,9 +122,24 @@ do
         --no-color|--no-colour)
             COLORS=false
             ;;
+        test-*.py)
+            files=("$TESTS/$1")
+            ;;
+        *)
+            extra_args+=("$1")
+            ;;
     esac
     shift
 done
+
+# Expand files
+if [ "${#files[@]}" -eq 0 ]
+then
+    while IFS= read -r -d $'\0' file
+    do
+        files+=("$file")
+    done < <(find "${FIND_FLAGS[@]}" -print0)
+fi
 
 [ "${#actions[@]}" -eq 0 ] && actions=(run coverage)
 
@@ -130,15 +147,20 @@ for action in "${actions[@]}"
 do
     case "$action" in
         debug)
-            rm -f *.pyc
-            PYTHONPATH="$SOURCES" find "${FIND_FLAGS[@]}" -exec python {} \;
+            for file in "${files[@]}"
+            do
+                rm -f "${file}c"
+                PYTHONPATH="$SOURCES" python "$file" "${extra_args[@]}"
+            done
             ;;
         run|test)
             cd "$SOURCES"
             rm -f .coverage
-            find "${FIND_FLAGS[@]}" | \
-                xargs -n1 coverage "${COVERAGE_RUN_FLAGS[@]}" || \
-                fail "Some tests failed"
+            for file in "${files[@]}"
+            do
+                coverage "${COVERAGE_RUN_FLAGS[@]}" "$file" "${extra_args[@]}" || \
+                    fail "Some tests failed"
+            done
             ;;
         coverage)
             cd "$SOURCES"
