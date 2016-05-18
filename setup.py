@@ -17,18 +17,7 @@
 #
 
 import os
-from distutils.core import setup
-
-
-def get_packages(root):
-    if type(root) is str:
-        root = [root]
-    return sum((
-        get_packages(root + [subdir])
-        for subdir in
-        os.listdir(os.path.join(*root))
-        if os.path.isdir(os.path.join(*(root + [subdir])))
-    ), [".".join(root)])
+from setuptools import setup, find_packages
 
 
 setup(
@@ -39,10 +28,16 @@ setup(
     author="Mattia Basaglia",
     author_email="mattia.basaglia@gmail.com",
     url="https://github.com/mbasaglia/Python-Ansi-Terminal-Styling-Interface",
-    packages=get_packages("patsi"),
+    include_package_data=True,
+    packages=find_packages("patsi"),
     scripts=["patsi-render.py"],
     license="GPLv3+",
     platforms=["any"],
+    extras_require = {
+        "png": ["cairosvg"]
+    },
+    #test_suite="test",
+    #tests_require=open("test/requirements-test.pip").read(),
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Environment :: Console",
