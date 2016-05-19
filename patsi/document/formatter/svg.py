@@ -16,6 +16,7 @@
 #
 from __future__ import absolute_import
 from xml.sax.saxutils import escape
+from contextlib import contextmanager
 
 from . import factory
 from .. import tree
@@ -40,9 +41,22 @@ class SvgFormatter(object):
     def font_width(self):
         return self.font_size / 2.0
 
+    @property
+    def font_height(self):
+        return self.font_size
+
     def document(self, doc, output):
-        width = doc.width * self.font_width
-        height = doc.height * self.font_size
+        with self.wrap_svg(doc, output):
+            if self.flat:
+                self.layer(doc.flattened(), output, True)
+            else:
+                for layer in doc.layers:
+                    self.layer(layer, output, True)
+
+    @contextmanager
+    def wrap_svg(self, element, output):
+        width = element.width * self.font_width
+        height = element.height * self.font_height
 
         output.write("<?xml version='1.0' encoding='UTF-8' ?>\n")
         output.write("<svg xmlns='http://www.w3.org/2000/svg' width='%s' height='%s'>\n" % (width, height))
@@ -52,15 +66,19 @@ class SvgFormatter(object):
             height
         ))
 
-        if self.flat:
-            self.layer(doc.flattened(), output)
-        else:
-            for layer in doc.layers:
-                self.layer(layer, output)
+        yield
 
         output.write("</svg>\n")
 
-    def layer(self, layer, output):
+
+    def layer(self, layer, output, bare=False):
+        if not bare and (
+                isinstance(layer, tree.Layer) or
+                isinstance(layer, tree.FreeColorLayer)
+        ):
+            with self.wrap_svg(layer, output):
+                return self.layer(layer, output, True)
+
         css = [
             "font-family:monospace",
             "font-size:%spx" % self.font_size,
@@ -81,7 +99,7 @@ class SvgFormatter(object):
                 if line:
                     output.write("<tspan x='{x}' y='{y}'>{line}</tspan>\n".format(
                         x=0,
-                        y=y * self.font_size,
+                        y=y * self.font_height,
                         line=escape(line)
                     ))
         elif isinstance(layer, tree.FreeColorLayer):
@@ -93,7 +111,7 @@ class SvgFormatter(object):
                     prev_color = col
                 output.write("<tspan x='{x}' y='{y}' style='fill:{color};'>{char}</tspan>\n".format(
                     x=pos[0] * self.font_width,
-                    y=pos[1] * self.font_size,
+                    y=pos[1] * self.font_height,
                     color=self.color(prev_color),
                     char=escape(char)
                 ))

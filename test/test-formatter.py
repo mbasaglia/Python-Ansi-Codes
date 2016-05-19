@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import json
+from xml.etree import ElementTree
 from mock import patch
 import test_common
 
@@ -446,5 +447,158 @@ class TestPngFormatter(test_common.StringOutputTestCase):
         self.fmt.document(doc, self.output)
         self._check_png_header()
 
+
+class TestSVGFormatter(test_common.StringOutputTestCase):
+    fmt = formatter.SvgFormatter()
+    xmlns = "http://www.w3.org/2000/svg"
+
+
+    def _assert_element(self, elem, name):
+        self.assertEquals(elem.tag, "{%s}%s" % (self.xmlns, name))
+
+    def _check_svg(self):
+        try:
+            elem = ElementTree.fromstring(self._get_data())
+            self._assert_element(elem, "svg")
+            return elem
+        except ElementTree.ParseError as e:
+            self.fail("Invalid XML: %s" % e)
+
+    def test_flat(self):
+        self.assertFalse(formatter.SvgFormatter().flat)
+        self.assertTrue(formatter.SvgFormatter(flatten=True).flat)
+
+    def test_color(self):
+        colors = [
+            color.RgbColor(1, 2, 255),
+            color.IndexedColor(1, palette.colors8_dark),
+            color.IndexedColor(1, palette.colors8_bright),
+            color.IndexedColor(1, palette.colors16),
+            color.IndexedColor(9, palette.colors16),
+            color.IndexedColor(9, palette.colors256),
+        ]
+
+        for doc_col in colors:
+            self.assertEquals(self.fmt.color(doc_col), doc_col.rgb.hex())
+
+        self.assertEquals(self.fmt.color(None), "inherit")
+
+        self.assertRaises(Exception, lambda: self.fmt.color(69))
+
+    def test_layer(self):
+        red = color.IndexedColor(1, palette.colors16)
+        blue = color.IndexedColor(4, palette.colors16)
+        layer = tree.Layer("Hello World", red)
+        self._clear_data()
+        self.fmt.layer(layer, self.output)
+        elem = self._check_svg()
+        self.assertEquals(len(elem), 2)
+        self._assert_element(elem[0], "rect")
+        self._assert_element(elem[1], "text")
+        self.assertEquals(
+            elem.get("width"),
+            str(layer.width * self.fmt.font_width)
+        )
+        self.assertEquals(
+            elem.get("height"),
+            str(layer.height * self.fmt.font_height)
+        )
+        self.assertEquals(
+            elem[0].get("width"),
+            str(layer.width * self.fmt.font_width)
+        )
+        self.assertEquals(
+            elem[0].get("height"),
+            str(layer.height * self.fmt.font_height)
+        )
+        self._assert_element(elem[1][0], "tspan")
+        self.assertEquals(elem[1][0].text.strip(), layer.text.strip())
+
+        layer = tree.Layer("Hello&<World>", red)
+        self._clear_data()
+        self.fmt.layer(layer, self.output)
+        elem = self._check_svg()
+        self.assertEquals(elem[1][0].text.strip(), layer.text.strip())
+
+        layer = tree.FreeColorLayer()
+        layer.set_char(0, 0, "H", red)
+        layer.set_char(1, 0, "e", red)
+        layer.set_char(2, 0, "l", red)
+        layer.set_char(3, 0, "l", red)
+        layer.set_char(4, 0, "o", blue)
+        layer.set_char(5, 0, "!", blue)
+        self._clear_data()
+        self.fmt.layer(layer, self.output)
+        elem = self._check_svg()
+        self.assertEquals(len(elem), 2)
+        self._assert_element(elem[0], "rect")
+        self._assert_element(elem[1], "text")
+        self.assertEquals(
+            elem.get("width"),
+            str(layer.width * self.fmt.font_width)
+        )
+        self.assertEquals(
+            elem.get("height"),
+            str(layer.height * self.fmt.font_height)
+        )
+        self.assertEquals(
+            elem[0].get("width"),
+            str(layer.width * self.fmt.font_width)
+        )
+        self.assertEquals(
+            elem[0].get("height"),
+            str(layer.height * self.fmt.font_height)
+        )
+        self.assertEquals(len(elem[1]), len(layer.matrix))
+        for x, tspan in enumerate(sorted(elem[1], key=lambda e: float(e.get("x")))):
+            self._assert_element(tspan, "tspan")
+            self.assertEquals(tspan.text, layer.matrix[(x, 0)][0])
+            color_hex = layer.matrix[(x, 0)][1].rgb.hex()
+            self.assertIn("fill:%s;" % color_hex, tspan.get("style"))
+
+        layer = None
+        self._clear_data()
+        self.assertRaises(TypeError, lambda: self.fmt.layer(layer, self.output))
+        self._check_data("")
+
+    def test_document_noflat(self):
+        metadata = {"hello": "world"}
+        doc = tree.Document(
+            "test",
+            [
+                tree.Layer("Hello", color.IndexedColor(1, palette.colors16)),
+                tree.Layer("\nWorld", color.IndexedColor(4, palette.colors16)),
+            ],
+            metadata
+        )
+        self.fmt.document(doc, self.output)
+        elem = self._check_svg()
+        self.assertEquals(len(elem), len(doc.layers)+1)
+        self._assert_element(elem[0], "rect")
+
+        for i in range(len(doc.layers)):
+            self._assert_element(elem[i+1], "text")
+            self.assertEquals(
+                elem[i+1][0].text.strip(),
+                doc.layers[i].text.strip()
+            )
+
+    def test_document_flat(self):
+        metadata = {"hello": "world"}
+        doc = tree.Document(
+            "test",
+            [
+                tree.Layer("Hello", color.IndexedColor(1, palette.colors16)),
+                tree.Layer("\nWorld", color.IndexedColor(4, palette.colors16)),
+            ],
+            metadata
+        )
+        self.fmt.flat = True
+        self.fmt.document(doc, self.output)
+        self.fmt.flat = False
+        elem = self._check_svg()
+        self.assertEquals(len(elem), 2)
+        self._assert_element(elem[0], "rect")
+        self._assert_element(elem[1], "text")
 
 test_common.main()
