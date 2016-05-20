@@ -601,4 +601,5 @@ class TestSVGFormatter(test_common.StringOutputTestCase):
         self._assert_element(elem[0], "rect")
         self._assert_element(elem[1], "text")
 
+
 test_common.main()

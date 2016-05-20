@@ -17,7 +17,7 @@
 from . import factory
 from .. import tree
 from .. import _misc
-from .. import color
+from .. import color as color_ns
 from .. import palette
 from ... import ansi
 
@@ -40,7 +40,7 @@ class AnsiLoader(object):
                 self.doc.layers[0].set_char(x, y, ch, color)
                 return
 
-            if isinstance(color, color.IndexedColor):
+            if isinstance(color, color_ns.IndexedColor):
                 index = (len(color.palette), color.index)
             else:
                 index = (-1, color.rgb)
@@ -104,19 +104,19 @@ class AnsiLoader(object):
                 bright = False
             elif isinstance(flag, ansi.SGR.ColorRGB):
                 if flag.background == background:
-                    result = color.RgbColor(flag.r, flag.g, flag.b)
+                    result = color_ns.RgbColor(flag.r, flag.g, flag.b)
             elif isinstance(flag, ansi.SGR.Color):
                 if flag.background == background:
                     if flag.color == flag.ResetColor:
                         result = None
                     else:
                         bright = flag.bright or bright
-                        result = color.IndexedColor(flag.color, palette.colors16)
+                        result = color_ns.IndexedColor(flag.color, palette.colors16)
             elif isinstance(flag, ansi.SGR.Color256):
                 if flag.background == background:
-                    result = color.IndexedColor(flag.color, palette.colors256)
+                    result = color_ns.IndexedColor(flag.color, palette.colors256)
 
-        if isinstance(result, color.IndexedColor) and len(result.palette) == 16 and bright:
+        if isinstance(result, color_ns.IndexedColor) and len(result.palette) == 16 and bright:
             result.index += 8
 
         return result

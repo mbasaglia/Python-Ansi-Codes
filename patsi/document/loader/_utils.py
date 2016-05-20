@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import re
-from .. import color
+from .. import color as color_ns
 from .. import palette
 
 
@@ -26,9 +26,13 @@ def string_to_color(color):
     if not color:
         return None
     if _rgb_color_regex.match(color):
-        return color.RgbColor(color[1:3], color[3:5], color[5:7])
+        return color_ns.RgbColor(
+            int(color[1:3], 16),
+            int(color[3:5], 16),
+            int(color[5:7], 16)
+        )
     if color in palette.colors16.names:
-        return color.IndexedColor(str(color), palette.colors16)
+        return color_ns.IndexedColor(str(color), palette.colors16)
     if color in palette.colors256.names:
-        return color.IndexedColor(str(color), palette.colors256)
+        return color_ns.IndexedColor(str(color), palette.colors256)
     return None

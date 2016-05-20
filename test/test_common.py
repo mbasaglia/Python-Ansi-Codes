@@ -72,6 +72,9 @@ class MockFile(object):
         self.mode = mode
         return self
 
+    def reset(self, contents=""):
+        self._wrapped = StringIO(contents)
+
 
 def main():
     if inspect.getmodule(inspect.stack()[1][0]).__name__ == "__main__":

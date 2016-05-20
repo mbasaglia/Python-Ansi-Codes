@@ -174,10 +174,13 @@ class TestDocument(test_common.TestCase):
 
 class TestMisc(test_common.TestCase):
     def test_basename(self):
+        self.assertEquals(_misc.basename(""), "")
         self.assertEquals(_misc.basename("foo"), "foo")
         self.assertEquals(_misc.basename("foo.bar"), "foo")
+        self.assertEquals(_misc.basename("foo.b.a.r"), "foo")
         self.assertEquals(_misc.basename("hello/foo.bar"), "foo")
-        self.assertEquals(_misc.basename("hello/foo.b.a.r"), "foo")
+        self.assertEquals(_misc.basename("hello/foo"), "foo")
+        self.assertEquals(_misc.basename("hello.world/foo"), "foo")
         self.assertEquals(_misc.basename("hello.world/foo.bar"), "foo")
 
     def test_extension(self):
