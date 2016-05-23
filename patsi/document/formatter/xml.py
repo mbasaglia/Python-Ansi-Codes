@@ -30,7 +30,7 @@ class XmlFormatter(object):
         if doc.metadata:
             metadata = ElementTree.SubElement(xml_doc, "metadata")
             for key, val in doc.metadata.iteritems():
-                element = ElementTree.SubElement(metadata)
+                element = ElementTree.SubElement(metadata, key)
                 element.text = val
         for layer in doc.layers:
             xml_doc.append(self.layer_element(layer))

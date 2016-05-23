@@ -40,15 +40,21 @@ class XmlLoader(object):
             string_to_color(element.get("color", ""))
         )
 
+    def _load_xml_metadata(self, element):
+        if element is not None:
+            return {child.tag: child.text for child in element}
+        return {}
+
+
     def load_xml(self, doc_element):
         return tree.Document(
             doc_element.get("name", ""),
             [self._load_xml_layer(layer) for layer in doc_element.findall("layer")],
-            doc_element.get("metadata", {}),
+            self._load_xml_metadata(doc_element.find("metadata")),
         )
 
     def load_string(self, string):
-        return self.load_xml(ElementTree.fromstring(string).getroot())
+        return self.load_xml(ElementTree.fromstring(string))
 
     def load_file(self, file):
         return self.load_xml(ElementTree.parse(file).getroot())
