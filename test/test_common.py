@@ -67,7 +67,7 @@ class MockFile(object):
     def __exit__(self, *args):
         pass
 
-    def open(self, file, mode):
+    def open(self, file, mode="r"):
         self.name = file
         self.mode = mode
         return self

@@ -31,6 +31,7 @@ class AnsiLoader(object):
 
         def clear(self):
             if self.loader.colors_to_layers:
+                self.doc.layers = []
                 self.layers = {}
             else:
                 self.doc.layers = [tree.FreeColorLayer()]
@@ -40,7 +41,9 @@ class AnsiLoader(object):
                 self.doc.layers[0].set_char(x, y, ch, color)
                 return
 
-            if isinstance(color, color_ns.IndexedColor):
+            if color is None:
+                index = (-1, None)
+            elif isinstance(color, color_ns.IndexedColor):
                 index = (len(color.palette), color.index)
             else:
                 index = (-1, color.rgb)
