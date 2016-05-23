@@ -272,4 +272,81 @@ class TestAnsiLoader(test_common.TestCase):
             self.assertEquals(doc.layers[0].text, "Hello\n")
 
 
+class TestJsonLoader(test_common.TestCase):
+    ldr = loader.JsonLoader()
+
+    def test_document(self):
+        doc = self.ldr.load_string("{}")
+        self.assertIsInstance(doc, tree.Document)
+        self.assertEquals(doc.name, "")
+        self.assertEquals(doc.metadata, {})
+        self.assertEquals(len(doc.layers), 0)
+
+        doc = self.ldr.load_string('{"name":"foo"}')
+        self.assertIsInstance(doc, tree.Document)
+        self.assertEquals(doc.name, "foo")
+        self.assertEquals(doc.metadata, {})
+        self.assertEquals(len(doc.layers), 0)
+
+        doc = self.ldr.load_string('{"name":"foo", "metadata":{"foo":"bar"}}')
+        self.assertIsInstance(doc, tree.Document)
+        self.assertEquals(doc.name, "foo")
+        self.assertEquals(doc.metadata, {"foo": "bar"})
+        self.assertEquals(len(doc.layers), 0)
+
+    def test_layer(self):
+        doc = self.ldr.load_string("""{"layers":[
+            {"color": "red", "text": "hello"},
+            {"text": "world"},
+            {"chars":[
+                {"x":0, "y":0, "char":"f"},
+                {"x":1, "y":0, "char":"o", "color":"blue"},
+                {"x":0, "y":2, "char":"o", "color":"#f00f00"}
+            ]}
+        ]}""")
+        self.assertIsInstance(doc, tree.Document)
+        self.assertEquals(len(doc.layers), 3)
+
+        self.assertIsInstance(doc.layers[0], tree.Layer)
+        self.assertEquals(doc.layers[0].text, "hello\n")
+        self.assertEquals(
+            doc.layers[0].color,
+            color.IndexedColor(1, palette.colors16)
+        )
+
+        self.assertIsInstance(doc.layers[1], tree.Layer)
+        self.assertEquals(doc.layers[1].text, "world\n")
+        self.assertIsNone(doc.layers[1].color)
+
+        self.assertIsInstance(doc.layers[2], tree.FreeColorLayer)
+        self.assertEquals(doc.layers[2].matrix[(0, 0)][0], "f")
+        self.assertIsNone(doc.layers[2].matrix[(0, 0)][1])
+        self.assertEquals(doc.layers[2].matrix[(1, 0)][0], "o")
+        self.assertEquals(
+            doc.layers[2].matrix[(1, 0)][1],
+            color.IndexedColor(4, palette.colors16)
+        )
+        self.assertEquals(doc.layers[2].matrix[(0, 2)][0], "o")
+        self.assertEquals(
+            doc.layers[2].matrix[(0, 2)][1],
+            color.RgbColor(0xf0, 0x0f, 0x00)
+        )
+
+    def test_load_file(self):
+        doc_string = '{"layers":[{"text":"Hello"}]}'
+        doc = self.ldr.load_file(StringIO(doc_string))
+        self.assertIsInstance(doc, tree.Document)
+        self.assertEquals(len(doc.layers), 1)
+        self.assertIsInstance(doc.layers[0], tree.Layer)
+        self.assertEquals(doc.layers[0].text, "Hello\n")
+
+        mock_file = test_common.MockFile(StringIO(doc_string))
+        with patch("patsi.document.loader.json.open", mock_file.open):
+            doc = self.ldr.load_file("foo/bar.ansi")
+            self.assertIsInstance(doc, tree.Document)
+            self.assertEquals(len(doc.layers), 1)
+            self.assertIsInstance(doc.layers[0], tree.Layer)
+            self.assertEquals(doc.layers[0].text, "Hello\n")
+
+
 test_common.main()
