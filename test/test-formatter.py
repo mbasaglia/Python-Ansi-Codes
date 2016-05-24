@@ -131,6 +131,13 @@ class TestAnsiFormatter(test_common.StringOutputTestCase):
         self._check_data(ansi.SGR(ansi.SGR.Red), "Hell", ansi.SGR(ansi.SGR.Blue), "o!\n")
         self._clear_data()
 
+        layer = tree.FreeColorLayer()
+        layer.set_char(1, 0, "H")
+        layer.set_char(2, 0, "i")
+        self.fmt.layer(layer, self.output)
+        self._check_data(" Hi\n")
+        self._clear_data()
+
         layer = None
         self.assertRaises(TypeError, lambda: self.fmt.layer(layer, self.output))
         self._check_data("")
@@ -309,6 +316,13 @@ class TestIrcFormatter(test_common.StringOutputTestCase):
         self._clear_data()
         self.assertRaises(TypeError, lambda: self.fmt.layer(layer, self.output))
         self._check_data("")
+
+        layer = tree.FreeColorLayer()
+        layer.set_char(1, 0, "H")
+        layer.set_char(2, 0, "i")
+        self.fmt.layer(layer, self.output)
+        self._check_data(" Hi\n")
+        self._clear_data()
 
     def test_layer_newline_color(self):
         red = color.IndexedColor(1, palette.colors16)

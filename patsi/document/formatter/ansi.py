@@ -36,7 +36,7 @@ class AnsiFormatter(object):
                 prev_color = None
                 for x in xrange(layer.width):
                     char, col = layer.matrix.get((x, y), (" ", color.UnchangedColor))
-                    if prev_color is None or (col is not color.UnchangedColor and col != prev_color):
+                    if col is not color.UnchangedColor and col != prev_color:
                         prev_color = col
                         output.write(self.color(col))
                     output.write(char)
