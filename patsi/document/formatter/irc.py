@@ -33,10 +33,11 @@ class IrcFormatter(object):
 
     def layer(self, layer, output):
         if isinstance(layer, tree.Layer):
-            output.write(self.color(layer.color) + layer.text)
+            for line in layer.text.splitlines(True):
+                output.write(self.color(layer.color) + line)
         elif isinstance(layer, tree.FreeColorLayer):
-            prev_color = None
             for y in xrange(layer.height):
+                prev_color = None
                 for x in xrange(layer.width):
                     char, col = layer.matrix.get((x, y), (" ", color.UnchangedColor))
                     if col is not color.UnchangedColor and col != prev_color:

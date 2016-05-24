@@ -135,6 +135,28 @@ class TestAnsiFormatter(test_common.StringOutputTestCase):
         self.assertRaises(TypeError, lambda: self.fmt.layer(layer, self.output))
         self._check_data("")
 
+    def test_layer_newline_color(self):
+        red = color.IndexedColor(1, palette.colors16)
+        sgr_red = str(ansi.SGR(ansi.SGR.Red))
+
+        layer = tree.Layer("Hello\nWorld", red)
+        self.fmt.layer(layer, self.output)
+        self.assertTrue(all(
+            line.startswith(sgr_red)
+            for line in self._get_data().splitlines()
+        ))
+        self._clear_data()
+
+        layer = tree.FreeColorLayer()
+        self.fmt.layer(layer, self.output)
+        layer.set_char(0, 0, "H", red)
+        layer.set_char(0, 1, "i", red)
+        self.assertTrue(all(
+            line.startswith(sgr_red)
+            for line in self._get_data().splitlines()
+        ))
+        self._clear_data()
+
     def test_document(self):
         doc = tree.Document(
             "test",
@@ -287,6 +309,28 @@ class TestIrcFormatter(test_common.StringOutputTestCase):
         self._clear_data()
         self.assertRaises(TypeError, lambda: self.fmt.layer(layer, self.output))
         self._check_data("")
+
+    def test_layer_newline_color(self):
+        red = color.IndexedColor(1, palette.colors16)
+        out_red = self.fmt.color(red)
+
+        layer = tree.Layer("Hello\nWorld", red)
+        self.fmt.layer(layer, self.output)
+        self.assertTrue(all(
+            line.startswith(out_red)
+            for line in self._get_data().splitlines()
+        ))
+        self._clear_data()
+
+        layer = tree.FreeColorLayer()
+        self.fmt.layer(layer, self.output)
+        layer.set_char(0, 0, "H", red)
+        layer.set_char(0, 1, "i", red)
+        self.assertTrue(all(
+            line.startswith(out_red)
+            for line in self._get_data().splitlines()
+        ))
+        self._clear_data()
 
     def test_document(self):
         red = color.IndexedColor(1, palette.colors16)
