@@ -452,7 +452,6 @@ class TestSVGFormatter(test_common.StringOutputTestCase):
     fmt = formatter.SvgFormatter()
     xmlns = "http://www.w3.org/2000/svg"
 
-
     def _assert_element(self, elem, name):
         self.assertEquals(elem.tag, "{%s}%s" % (self.xmlns, name))
 
@@ -600,6 +599,102 @@ class TestSVGFormatter(test_common.StringOutputTestCase):
         self.assertEquals(len(elem), 2)
         self._assert_element(elem[0], "rect")
         self._assert_element(elem[1], "text")
+
+
+class TestXMLFormatter(test_common.StringOutputTestCase):
+    fmt = formatter.XmlFormatter()
+
+    def _get_xml(self):
+        try:
+            return ElementTree.fromstring(self._get_data())
+        except ElementTree.ParseError as e:
+            self.fail("Invalid XML: %s" % e)
+
+    def test_color(self):
+        colors = [
+            color.RgbColor(1, 2, 255),
+            color.IndexedColor(1, palette.colors8_dark),
+            color.IndexedColor(1, palette.colors8_bright),
+            color.IndexedColor(1, palette.colors16),
+            color.IndexedColor(9, palette.colors16),
+            color.IndexedColor(9, palette.colors256),
+        ]
+
+        for doc_col in colors:
+            self.assertEquals(self.fmt.color(doc_col), doc_col.name)
+
+        self.assertEquals(self.fmt.color(None), "")
+
+        self.assertRaises(Exception, lambda: self.fmt.color(69))
+
+    def test_layer(self):
+        red = color.IndexedColor(1, palette.colors16)
+        blue = color.IndexedColor(4, palette.colors16)
+        layer = tree.Layer("Hello World", red)
+        self._clear_data()
+        self.fmt.layer(layer, self.output)
+        elem = self._get_xml()
+        self.assertEquals(elem.tag, "layer")
+        self.assertEquals(elem.text, layer.text)
+        self.assertEquals(elem.get("color"), "red")
+
+        layer = tree.Layer("Hello&<World>", red)
+        self._clear_data()
+        self.fmt.layer(layer, self.output)
+        elem = self._get_xml()
+        self.assertEquals(elem.text, layer.text)
+
+        layer = tree.FreeColorLayer()
+        layer.set_char(0, 0, "H", red)
+        layer.set_char(1, 0, "e", red)
+        layer.set_char(2, 0, "l", red)
+        layer.set_char(3, 0, "l", red)
+        layer.set_char(4, 0, "o", blue)
+        layer.set_char(5, 0, "!", blue)
+        self._clear_data()
+        self.fmt.layer(layer, self.output)
+        elem = self._get_xml()
+        self.assertEquals(elem.tag, "layer")
+        self.assertEquals(len(elem), len(layer.matrix))
+
+        for x, char in enumerate(sorted(elem, key=lambda e: float(e.get("x")))):
+            self.assertEquals(char.tag, "char")
+            self.assertEquals(char.text, layer.matrix[(x, 0)][0])
+            self.assertEquals(char.get("color"), layer.matrix[(x, 0)][1].name)
+
+        layer = None
+        self._clear_data()
+        self.assertRaises(TypeError, lambda: self.fmt.layer(layer, self.output))
+        self._check_data("")
+
+
+    def test_document(self):
+        doc = tree.Document()
+        self.fmt.document(doc, self.output)
+        elem = self._get_xml()
+        self.assertEquals(len(elem), 0)
+        self.assertEquals(elem.tag, "document")
+
+        metadata = {"hello": "world"}
+        doc = tree.Document(
+            "test",
+            [
+                tree.Layer("Hello", color.IndexedColor(1, palette.colors16)),
+                tree.Layer("\nWorld", color.IndexedColor(4, palette.colors16)),
+            ],
+            metadata
+        )
+        self._clear_data()
+        self.fmt.document(doc, self.output)
+        elem = self._get_xml()
+        self.assertEquals(len(elem), len(doc.layers)+1)
+        self.assertEquals(elem.tag, "document")
+        self.assertEquals(elem.get("name"), "test")
+
+        for i, layer in enumerate(elem.findall("layer")):
+            self.assertEquals(layer.text, doc.layers[i].text)
+
+        self.assertEquals(elem.find("metadata").find("hello").text, "world")
 
 
 test_common.main()

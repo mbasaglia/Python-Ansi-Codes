@@ -21,8 +21,8 @@ from ..ansi import CharMover
 class Document(object):
     def __init__(self, name="", layers=[], metadata={}):
         self.name = name
-        self.layers = layers
-        self.metadata = metadata
+        self.layers = layers if layers else []       # This avoids overwriting the default argument value
+        self.metadata = metadata if metadata else {}
 
     def flattened(self):
         if len(self.layers) == 0:
