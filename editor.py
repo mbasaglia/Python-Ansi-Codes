@@ -459,7 +459,7 @@ class Manager(Widget):
         height, width = self.window.getmaxyx()
         self.editor_window = curses.newwin(height-1, width, 1, 0)
 
-        self.title_bar = HorizontalMenu(self, None, self.editors, None, lambda e: e.name)
+        self.title_bar = TabBar(self, None, self.editors, None, lambda e: e.name)
         self.title_bar.signal_changed = self._switch_current_editor
         self.focus(self.title_bar)
 
@@ -490,10 +490,6 @@ class Manager(Widget):
                     self.focus(editor)
 
             self.refresh()
-
-    #def render(self):
-        ##if self.current_editor and self.current_editor.has_focus():
-        #self.current_editor.render()
 
     def _activate_editor(self):
         if self.current_editor:
@@ -532,15 +528,16 @@ class Manager(Widget):
         self.current_editor.refresh()
 
 
-class HorizontalMenu(Widget):
+class TabBar(Widget):
     def __init__(self, parent, window, items, current, formatter=str, separator="|"):
-        super(HorizontalMenu, self).__init__(parent, window)
+        super(TabBar, self).__init__(parent, window)
         self.items = items
         self.current = current
         self.formatter = formatter
         self.separator = separator
         self.signal_changed = lambda x: None
         self.render()
+        self.add_button = True
 
     def render(self):
         self.window.clear()
@@ -576,7 +573,7 @@ class HorizontalMenu(Widget):
         self.render()
 
     def mouse_event(self, event):
-        super(HorizontalMenu, self).mouse_event(event)
+        super(TabBar, self).mouse_event(event)
 
     def window_bounds_hint(self, parent_bounds):
         return (
@@ -602,4 +599,3 @@ with curses_context() as screen:
         manager.open_tab(file)
     with ansi.keyboard_interrupt():
         manager.loop()
-print manager.title_bar.window_bounds()
