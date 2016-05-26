@@ -84,6 +84,11 @@ class Point(object):
             self.y - other.y
         )
 
+    def in_window(self, curses_window):
+        min = Point(*curses_window.getbegyx(), reversed=True)
+        max = Point(*curses_window.getmaxyx(), reversed=True)
+        return x > min.x and x < max.x and y > min.y and y < max.y
+
 
 class Editor(object):
     def __init__(self, window):
@@ -94,7 +99,6 @@ class Editor(object):
         self.offset = Point(1, 1)
         self.message = ""
         self.window = window
-
 
     def open(self, file):
         self.document = document.loader.factory.load(file)
@@ -237,7 +241,6 @@ class Manager(object):
 
         height, width = screen.getmaxyx()
         self.editor_window = curses.newwin(height-1, width, 1, 0)
-        self.screen.keypad(1)
 
     def open_tab(self, file=None):
         editor = Editor(self.editor_window)
@@ -289,29 +292,23 @@ class Manager(object):
         self._render_document()
         self.screen.refresh()
 
-    def _get_input(self):
-        ch = self.screen.getch()
-        if ch == curses.KEY_RESIZE:
-            screen_height, screen_width = self.screen.getmaxyx()
-            self.editor_window.resize(screen_height-1, screen_width)
-            if self.current_editor:
-                self.current_editor.resize_event(screen_height-1, screen_width)
-        elif ch == curses.KEY_MOUSE:
-            try:
-                id, x, y, z, bstate = curses.getmouse()
+    def resize_event(self, width, height):
+        self.editor_window.resize(screen_height-1, screen_width)
+        if self.current_editor:
+            self.current_editor.resize_event(screen_height-1, screen_width)
 
-                pos = Point(x, y)
-                min = Point(*self.editor_window.getbegyx(), reversed=True)
-                max = Point(*self.editor_window.getmaxyx(), reversed=True)
-                if x > min.x and x < max.x and y > min.y and y < max.y:
-                    if  self.edit_mode:
-                        relative = pos - self.current_editor.offset - min
-                        self.current_editor.mouse_event(relative, bstate)
-                else:
-                    pass
-            except curses.error:
-                pass
-        elif ch == 0x1b: # Escape
+    def mouse_event(self, pos, bstate):
+        if pos.in_window(self.editor_window):
+            if  self.edit_mode:
+                relative = pos - self.current_editor.offset - min
+                self.current_editor.mouse_event(relative, bstate)
+
+    def text_event(self, char):
+        if self.edit_mode:
+            self.current_editor.text_event(char)
+
+    def key_event(self, key):
+        if key == 0x1b: # Escape
             if self.edit_mode:
                 self.edit_mode = False
                 curses.curs_set(0)
@@ -319,37 +316,56 @@ class Manager(object):
                 self.edit_mode = True
                 curses.curs_set(1)
             self._render()
+        elif self.edit_mode:
+            self.current_editor.key_event(key)
+        elif key == curses.KEY_UP:
+            self._switch_layer(+1)
+        elif key == curses.KEY_DOWN:
+            self._switch_layer(-1)
+        elif key == curses.KEY_LEFT:
+            self._switch_document(-1)
+        elif key == curses.KEY_RIGHT:
+            self._switch_document(+1)
+
+    def _get_input(self):
+        ch = self.screen.getch()
+        if ch == curses.KEY_RESIZE:
+            screen_height, screen_width = self.screen.getmaxyx()
+            self.resize_event(screen_width, screen_height);
+        elif ch == curses.KEY_MOUSE:
+            try:
+                id, x, y, z, bstate = curses.getmouse()
+            except curses.error:
+                pass
+            self.mouse_event(Point(x, y), bstate)
         elif curses.ascii.isprint(ch):
-            if self.edit_mode:
-                self.current_editor.text_event(chr(ch))
+            self.text_event(chr(ch))
         else:
-            if self.edit_mode:
-                self.current_editor.key_event(ch)
-            elif ch == curses.KEY_UP:
-                self._switch_layer(+1)
-            elif ch == curses.KEY_DOWN:
-                self._switch_layer(-1)
-            elif ch == curses.KEY_LEFT:
-                self._switch_document(-1)
-            elif ch == curses.KEY_RIGHT:
-                self._switch_document(+1)
+            self.key_event(ch)
 
     def _switch_layer(self, delta):
         if not self.current_editor or not self.current_editor.document.layers:
             return
-        layers = self.current_editor.document.layers
-        layer_index = layers.index(self.current_editor.active_layer) + delta
-        if layer_index >= 0 and layer_index < len(layers):
-            self.current_editor.active_layer = layers[layer_index]
-            self._render_document()
+        self.current_editor.active_layer = next_object(
+            self.current_editor.document.layers,
+            self.current_editor.active_layer,
+            delta
+        )
+        self._render_document()
 
     def _switch_document(self, delta):
         if not self.editors:
             return
-        index = self.editors.index(self.current_editor) + delta
-        if index >= 0 and index < len(self.editors):
-            self.current_editor = self.editors[index]
-            self._render()
+        self.current_editor = next_object(self.editors, self.current_editor, delta)
+        self._render()
+
+
+def next_object(array, current, delta):
+    index = array.index(current) + delta
+    if index >= 0 and index < len(array):
+        return array[index]
+    return current
+
 
 with curses_context() as screen:
     curses.mousemask(curses.ALL_MOUSE_EVENTS)
