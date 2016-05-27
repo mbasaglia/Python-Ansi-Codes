@@ -58,4 +58,22 @@ class TestPoint(test_common.TestCase):
         self.assert_point(geo.Point(4, 5).interpolate(geo.Point(2, 3), 0), 4, 5)
         self.assert_point(geo.Point(4, 5).interpolate(geo.Point(2, 3), 1), 2, 3)
 
+    def test_elements(self):
+        point = geo.Point(4, 5)
+        self.assertEquals(point[0], point.x)
+        self.assertEquals(point["x"], point.x)
+        self.assertEquals(point[1], point.y)
+        self.assertEquals(point["y"], point.y)
+        self.assertRaises(KeyError, lambda: point[2])
+        self.assertRaises(KeyError, lambda: point["z"])
+
+        x, y = point
+        self.assert_point(point, x, y)
+        self.assertEquals(tuple(point), (x, y))
+
+    def test_repr(self):
+        point = geo.Point(4, 5)
+        self.assertEquals(str(point), str(tuple(point)))
+
+
 test_common.main()

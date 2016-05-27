@@ -86,3 +86,7 @@ class Point(object):
         if key == 1 or key == "y":
             return self.y
         raise KeyError(key)
+
+    def __iter__(self):
+        yield self.x
+        yield self.y
