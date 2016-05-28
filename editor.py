@@ -23,6 +23,7 @@ from contextlib import contextmanager
 
 from patsi import ansi
 from patsi import document
+from patsi.widgets.geometry import *
 
 
 @contextmanager
@@ -30,6 +31,7 @@ def curses_context():
     stdscr = curses.initscr()
     curses.noecho()
     curses.cbreak()
+    curses.nonl()
     stdscr.keypad(1)
     curses.start_color()
     curses.use_default_colors()
@@ -47,56 +49,19 @@ def curses_context():
         yield stdscr
     finally:
         stdscr.keypad(0);
+        curses.nl()
         curses.nocbreak();
         curses.echo()
         curses.endwin()
 
 
-class Point(object):
-    def __init__(self, *args, **kwargs):
-        if len(args) == 2:
-            if kwargs.get("reversed", False):
-                args = reversed(args)
-            self.x, self.y = args
-        elif len(args) == 1:
-            self.x, self.y = args[0]
-        else:
-            self.x = kwargs.get("x", 0)
-            self.y = kwargs.get("y", 0)
-
-    def __iadd__(self, other):
-        self.x += other.x
-        self.y += other.y
-
-    def __add__(self, other):
-        return Point(
-            self.x + other.x,
-            self.y + other.y
-        )
-
-    def __isub__(self, other):
-        self.x -= other.x
-        self.y -= other.y
-
-    def __sub__(self, other):
-        return Point(
-            self.x - other.x,
-            self.y - other.y
-        )
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-
-    def __ne__(self, other):
-        return not (self == other)
-
-    def in_window(self, curses_window):
-        min = Point(*curses_window.getbegyx(), reversed=True)
-        max = Point(*curses_window.getmaxyx(), reversed=True)
-        return self.x > min.x and self.x < max.x and self.y > min.y and self.y < max.y
-
-    def __repr__(self):
-        return "(%s, %s)" % (self.x, self.y)
+def color_to_curses(color):
+    if color is None:
+        return curses.A_NORMAL | curses.color_pair(0)
+    flags = curses.color_pair((color.index & 7) + 1)
+    if color.index & 8:
+        flags |= curses.A_BOLD
+    return flags
 
 
 class Event(object):
@@ -147,9 +112,7 @@ class Widget(object):
         if parent is not None:
             bounds = self.window_bounds_hint(parent.window_bounds())
             if window is None:
-                min, max = bounds
-                size = max - min
-                self.window = parent.window.subwin(size.y, size.x, min.y, min.x)
+                self.window = parent.window.subwin(bounds.height, bounds.width, bounds.y, bounds.x)
             else:
                 self.adjust_window_size(bounds)
             parent.children.append(self)
@@ -180,12 +143,13 @@ class Widget(object):
         return self.active and not self.parent or self.parent.focus_child == self
 
     def window_bounds(self):
-        min = Point(*self.window.getbegyx(), reversed=True)
-        max = Point(*self.window.getmaxyx(), reversed=True)
-        return (min, max)
+        return Rect(
+            top_left=Point(*self.window.getbegyx(), reversed=True),
+            bottom_right=Point(*self.window.getmaxyx(), reversed=True)
+        )
 
     def window_bounds_hint(self, parent_bounds):
-        return parent_bounds if not self.window else self.window_bounds()
+        return parent_bounds
 
     def loop(self):
         while True:
@@ -243,7 +207,7 @@ class Widget(object):
                 if child.active and event.pos.in_window(child.window):
                     if self.event_change_focus_child(child):
                         child_bounds = child.window_bounds()
-                        relative = event.pos - child_bounds[0]
+                        relative = event.pos - child_bounds.pos
                         child_event = Event.mouse_event(relative, event.buttons)
                         child.event(child_event)
                         if not child_event.propagate:
@@ -269,10 +233,8 @@ class Widget(object):
 
     def adjust_window_size(self, bounds):
         if self.window_bounds() != bounds:
-            min, max = bounds
-            size = max - min
-            self.window.mvwin(min.y, min.x)
-            self.window.resize(size.y, size.x)
+            self.window.mvwin(bounds.y, bounds.x)
+            self.window.resize(bounds.height, bounds.width)
 
     def refresh(self):
         self.window.clear()
@@ -300,11 +262,9 @@ class Editor(Widget):
         self.message = ""
 
     def window_bounds_hint(self, parent_bounds):
-        min, max = parent_bounds
-        return (
-            Point(min.x, min.y + 1),
-            max
-        )
+        bounds = parent_bounds.copy()
+        bounds.y1 = bounds.y1 + 1
+        return bounds
 
     def open(self, file):
         self.document = document.loader.factory.load(file)
@@ -328,7 +288,7 @@ class Editor(Widget):
             if pos.x < 1 or pos.y < 1 or pos.x >= win_width - 1 or pos.y >= win_height-1:
                 continue
             char, col = item
-            self.window.addstr(pos.y, pos.x, char, self._color_to_curses(col))
+            self.window.addstr(pos.y, pos.x, char, color_to_curses(col))
 
     def render_ui(self):
         win_height, win_width = self.window.getmaxyx()
@@ -360,18 +320,10 @@ class Editor(Widget):
             )
             self.window.chgat(1, self._active_color())
 
-    def _color_to_curses(self, color):
-        if color is None:
-            return curses.A_NORMAL | curses.color_pair(0)
-        flags = curses.color_pair((color.index & 7) + 1)
-        if color.index & 8:
-            flags |= curses.A_BOLD
-        return flags
-
     def _active_color(self):
         if self.active_layer:
-            return self._color_to_curses(self.active_layer.color)
-        return self._color_to_curses(None)
+            return color_to_curses(self.active_layer.color)
+        return color_to_curses(None)
 
     def _active_color_name(self):
         if self.active_layer:
@@ -457,14 +409,44 @@ class Manager(Widget):
         curses.curs_set(0)
 
         height, width = self.window.getmaxyx()
-        self.editor_window = curses.newwin(height-1, width, 1, 0)
+        self.editor_container = Widget(self, self.window)
+        self.editor_window = self.editor_container.window.subwin(height-1, width, 1, 0)
 
         self.title_bar = TabBar(self, None, self.editors, None, lambda e: e.name)
         self.title_bar.signal_changed = self._switch_current_editor
         self.focus(self.title_bar)
 
+        self.menu = Menu(self, None, [
+            Menu.Item("Select Layer", None, self._menu_select_layer),
+            Menu.Item("Layer Actions"),
+            Menu.Item("Save"),
+            Menu.Item("Open"),
+            Menu.Item("Close"),
+            Menu.Item("Exit"),
+        ])
+        self.focus(self.menu)
+
+
+    def _switch_layer(self, layer):
+        if not self.current_editor or not self.current_editor.document.layers:
+            return
+        self.current_editor.active_layer = layer
+        self.current_editor.refresh()
+
+    def _menu_select_layer(self):
+        if self.current_editor:
+            self.menu.push_submenu([
+                Menu.Item(
+                    layer.color.name,
+                    None,
+                    lambda: self._switch_layer(layer),
+                    color_to_curses(layer.color)
+                )
+                for layer in self.current_editor.document.layers
+            ])
+
     def open_tab(self, file=None):
-        editor = Editor(self, self.editor_window)
+        editor = Editor(self.editor_container, self.editor_window)
         if file is not None:
             try:
                 editor.open(file)
@@ -486,46 +468,29 @@ class Manager(Widget):
 
             if editor:
                 editor.active = True
-                if self.focus_child == old_editor:
-                    self.focus(editor)
+                self.editor_container.focus(editor)
 
             self.refresh()
 
     def _activate_editor(self):
         if self.current_editor:
             self.current_editor.active = True
-            self.focus(self.current_editor)
+            self.focus(self.editor_container)
             curses.curs_set(1)
             self.current_editor.refresh()
+            self.menu.active = False
 
     def key_event(self, event):
 
         if event.key == 0x1b: # Escape
-            if self.current_editor and self.current_editor.has_focus():
-                self.focus(self.title_bar)
+            if self.current_editor and self.editor_container.has_focus():
+                self.menu.active = True
+                self.focus(self.menu)
                 curses.curs_set(0)
             else:
                 self._activate_editor()
             self.refresh()
             event.accept()
-
-        if self.current_editor and not self.current_editor.has_focus():
-            if event.key == curses.KEY_UP:
-                self._switch_layer(+1)
-                event.accept()
-            elif event.key == curses.KEY_DOWN:
-                self._switch_layer(-1)
-                event.accept()
-
-    def _switch_layer(self, delta):
-        if not self.current_editor or not self.current_editor.document.layers:
-            return
-        self.current_editor.active_layer = next_object(
-            self.current_editor.document.layers,
-            self.current_editor.active_layer,
-            delta
-        )
-        self.current_editor.refresh()
 
 
 class TabBar(Widget):
@@ -540,7 +505,6 @@ class TabBar(Widget):
         self.add_button = True
 
     def render(self):
-        self.window.clear()
         x = 0
         self.window.addstr(0, x, self.separator)
         x += len(self.separator)
@@ -556,7 +520,6 @@ class TabBar(Widget):
             x += len(text)
             self.window.addstr(0, x, self.separator)
             x += len(self.separator)
-        self.window.refresh()
         # TODO handle overflow
 
     def key_event(self, event):
@@ -570,19 +533,108 @@ class TabBar(Widget):
             return
         self.current = next_object(self.items, self.current, delta)
         self.signal_changed(self.current)
-        self.render()
+        self.refresh()
 
     def mouse_event(self, event):
         super(TabBar, self).mouse_event(event)
 
     def window_bounds_hint(self, parent_bounds):
-        return (
-            parent_bounds[0],
-            Point(
-                parent_bounds[1].x,
-                parent_bounds[0].y + 1,
+        return Rect(
+            top_left=parent_bounds.top_left,
+            bottom_right=Point(
+                parent_bounds.right,
+                parent_bounds.top + 1,
             )
         )
+
+
+class Menu(Widget):
+    class Item(object):
+        def __init__(self, text, id=None, action=lambda: None, display_flags=0, auto_activate=False):
+            self.text = text
+            self.id = id
+            self.action = action
+            self.display_flags = display_flags
+            self.auto_activate = auto_activate
+
+    def __init__(self, parent, window, items=[], width=16):
+        self.width = width
+        super(Menu, self).__init__(parent, window)
+        self.items = items
+        self.current = items[0] if items else None
+        self.submenu = []
+
+    def window_bounds_hint(self, parent_bounds):
+        return Rect(
+            top_left=Point(parent_bounds.right - self.width, parent_bounds.top),
+            bottom_right=parent_bounds.bottom_right
+        )
+
+    def key_event(self, event):
+        if event.key == curses.KEY_UP:
+            self._switch_item(-1)
+        elif event.key == curses.KEY_DOWN:
+            self._switch_item(+1)
+        elif event.key == curses.KEY_ENTER:
+            self.activate()
+        elif event.key == curses.KEY_BACKSPACE:
+            if self.submenu:
+                self.pop_submenu()
+
+    def text_event(self, event):
+        if event.char == " " or event.char == "\n":
+            self.activate()
+
+    def _switch_item(self, delta):
+        if not self.items:
+            return
+
+        if not self.current:
+            self.current = self.items[0]
+        else:
+            self.current = next_object(self.items, self.current, delta)
+
+        if self.current.auto_activate:
+            self.current.action()
+
+        self.refresh()
+
+    def activate(self):
+        if self.current:
+            self.current.action()
+
+    def render(self):
+        y = self.window_bounds().center.y - len(self.items) / 2
+        for item in self.items:
+            if item is not self.current:
+                mode = 0
+            elif self.has_focus():
+                mode = curses.A_REVERSE
+            else:
+                mode = curses.A_UNDERLINE
+            self.window.addstr(y, 1, item.text, mode|item.display_flags)
+            y += 1
+        # TODO handle overflow
+
+        self.window.border("|", "|", "-", "-", "+", "+", "+", "+")
+
+    def focus_event(self, event):
+        if event.focus and not self.current and self.items:
+            self.current = self.items[0]
+
+    def push_submenu(self, items):
+        self.submenu.append((self.items, self.current))
+        self.items = items
+        self.current = items[0] if items else None
+        self.refresh()
+
+    def pop_submenu(self):
+        if not self.submenu:
+            raise OverflowError("Underflow")
+        cur_items = self.items
+        self.items, self.current = self.submenu.pop()
+        self.refresh()
+        return cur_items
 
 
 def next_object(array, current, delta):

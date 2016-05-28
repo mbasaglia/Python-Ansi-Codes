@@ -137,6 +137,8 @@ class TestRect(test_common.TestCase):
         self.assertEquals(rect.y, 2)
         self.assertEquals(rect.width, 10)
         self.assertEquals(rect.height, 30)
+
+        self.assertEquals(rect.pos, geo.Point(1, 2))
         self.assertEquals(rect.size, geo.Point(10, 30))
 
     def test_property_setters(self):
@@ -168,6 +170,19 @@ class TestRect(test_common.TestCase):
         rect.y = 102
         self.assert_rect(rect, 101, 102, 111, 132)
 
+
+        rect = geo.Rect(x1=1, y1=2, x2=11, y2=32)
+        rect.x1 = 101
+        rect.y1 = 102
+        self.assert_rect(rect, 101, 102, 11, 32)
+        rect.x2 = 201
+        rect.y2 = 202
+        self.assert_rect(rect, 101, 102, 201, 202)
+
+        rect = geo.Rect(x1=1, y1=2, x2=11, y2=32)
+        rect.pos = geo.Point(101, 102)
+        self.assert_rect(rect, 101, 102, 111, 132)
+
         rect = geo.Rect(x1=1, y1=2, x2=11, y2=32)
         rect.width = 100
         rect.height = 200
@@ -180,6 +195,60 @@ class TestRect(test_common.TestCase):
         rect = geo.Rect(x1=1, y1=2, x2=11, y2=32)
         rect.center = geo.Point(0, 0)
         self.assert_rect(rect, -5, -15, 5, 15)
+
+    def test_comparison(self):
+        self.assertTrue(
+            geo.Rect(x1=10, y1=20, x2=30, y2=40) ==
+            geo.Rect(x1=10, y1=20, x2=30, y2=40)
+        )
+        self.assertFalse(
+            geo.Rect(x1=10, y1=20, x2=30, y2=40) ==
+            geo.Rect(x1=15, y1=20, x2=30, y2=40)
+        )
+        self.assertFalse(
+            geo.Rect(x1=10, y1=20, x2=30, y2=40) ==
+            geo.Rect(x1=10, y1=25, x2=30, y2=40)
+        )
+        self.assertFalse(
+            geo.Rect(x1=10, y1=20, x2=30, y2=40) ==
+            geo.Rect(x1=10, y1=20, x2=35, y2=40)
+        )
+        self.assertFalse(
+            geo.Rect(x1=10, y1=20, x2=30, y2=40) ==
+            geo.Rect(x1=10, y1=20, x2=30, y2=45)
+        )
+
+        self.assertFalse(
+            geo.Rect(x1=10, y1=20, x2=30, y2=40) !=
+            geo.Rect(x1=10, y1=20, x2=30, y2=40)
+        )
+        self.assertTrue(
+            geo.Rect(x1=10, y1=20, x2=30, y2=40) !=
+            geo.Rect(x1=15, y1=20, x2=30, y2=40)
+        )
+        self.assertTrue(
+            geo.Rect(x1=10, y1=20, x2=30, y2=40) !=
+            geo.Rect(x1=10, y1=25, x2=30, y2=40)
+        )
+        self.assertTrue(
+            geo.Rect(x1=10, y1=20, x2=30, y2=40) !=
+            geo.Rect(x1=10, y1=20, x2=35, y2=40)
+        )
+        self.assertTrue(
+            geo.Rect(x1=10, y1=20, x2=30, y2=40) !=
+            geo.Rect(x1=10, y1=20, x2=30, y2=45)
+        )
+
+    def test_copy(self):
+        r1 = geo.Rect(x1=10, y1=20, x2=30, y2=40)
+        r2 = r1.copy()
+        self.assertIsNot(r1, r2)
+        r2.x1 = 100
+        r2.y1 = 200
+        r2.x2 = 300
+        r2.y2 = 400
+        self.assert_rect(r1, 10, 20, 30, 40)
+        self.assert_rect(r2, 100, 200, 300, 400)
 
 
 test_common.main()
