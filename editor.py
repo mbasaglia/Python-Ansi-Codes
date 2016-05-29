@@ -204,7 +204,7 @@ class Widget(object):
             if not event.propagate:
                 return
             for child in self.children:
-                if child.active and event.pos.in_window(child.window):
+                if child.active and child.window_bounds().contains(event.pos):
                     if self.event_change_focus_child(child):
                         child_bounds = child.window_bounds()
                         relative = event.pos - child_bounds.pos
@@ -248,7 +248,8 @@ class Widget(object):
         pass
 
     def focus_event(self, event):
-        pass
+        if event.focus:
+            self.refresh()
 
 
 class Editor(Widget):
@@ -398,6 +399,7 @@ class Editor(Widget):
         super(Editor, self).mouse_event(event)
         if event.buttons == curses.BUTTON1_CLICKED:
             self.cursor = event.pos - self.offset
+            self._adjust_cursor()
             event.accept()
 
 
@@ -531,9 +533,7 @@ class TabBar(Widget):
     def _switch_element(self, delta):
         if not self.items:
             return
-        self.current = next_object(self.items, self.current, delta)
-        self.signal_changed(self.current)
-        self.refresh()
+        self._change_current(next_object(self.items, self.current, delta))
 
     def mouse_event(self, event):
         super(TabBar, self).mouse_event(event)
@@ -546,6 +546,24 @@ class TabBar(Widget):
                 parent_bounds.top + 1,
             )
         )
+
+    def _change_current(self, next):
+        if next != self.current:
+            self.current = next
+            self.signal_changed(self.current)
+            self.refresh()
+
+    def mouse_event(self, event):
+        super(TabBar, self).mouse_event(event)
+        if event.buttons == curses.BUTTON1_CLICKED:
+            x = len(self.separator)
+            for item in self.items:
+                length = len(self.formatter(item))
+                if x < event.pos.x < x + length:
+                    self._change_current(item)
+                    break
+                x += length
+            event.accept()
 
 
 class Menu(Widget):
@@ -603,8 +621,11 @@ class Menu(Widget):
         if self.current:
             self.current.action()
 
+    def _starting_y(self):
+        return self.window_bounds().center.y - len(self.items) / 2
+
     def render(self):
-        y = self.window_bounds().center.y - len(self.items) / 2
+        y = self._starting_y()
         for item in self.items:
             if item is not self.current:
                 mode = 0
@@ -621,6 +642,7 @@ class Menu(Widget):
     def focus_event(self, event):
         if event.focus and not self.current and self.items:
             self.current = self.items[0]
+        super(Menu, self).focus_event(event)
 
     def push_submenu(self, items):
         self.submenu.append((self.items, self.current))
@@ -636,6 +658,15 @@ class Menu(Widget):
         self.refresh()
         return cur_items
 
+    def mouse_event(self, event):
+        super(Menu, self).mouse_event(event)
+        if event.buttons == curses.BUTTON1_CLICKED:
+            index = event.pos.y - self._starting_y()
+            if 0 <= index < len(self.items):
+                self.current = self.items[index]
+                self.activate()
+                self.refresh()
+            event.accept()
 
 def next_object(array, current, delta):
     index = array.index(current) + delta
