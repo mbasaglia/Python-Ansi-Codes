@@ -152,9 +152,12 @@ class Widget(object):
         return parent_bounds
 
     def loop(self):
-        while True:
+        while self.active:
             self.render()
             self.get_input()
+
+    def deactivate(self):
+        self.active = False
 
     def get_input(self):
         ch = self.window.getch()
@@ -423,10 +426,25 @@ class Manager(Widget):
             Menu.Item("Layer Actions"),
             Menu.Item("Save"),
             Menu.Item("Open"),
-            Menu.Item("Close"),
-            Menu.Item("Exit"),
+            Menu.Item("Close", None, self.close_current_editor),
+            Menu.Item("Exit", None, self.deactivate),
         ])
         self.focus(self.menu)
+
+    def close_current_editor(self):
+        if not self.current_editor:
+            return
+
+        index = self.editors.index(self.current_editor)
+        self.editor_container.children.remove(self.current_editor)
+        self.editors.remove(self.current_editor)
+        self.current_editor = None
+        if self.editors:
+            if index == len(self.editors):
+                index -= 1
+            self._switch_current_editor(self.editors[index])
+        else:
+            self.refresh()
 
 
     def _switch_layer(self, layer):
@@ -483,7 +501,6 @@ class Manager(Widget):
             self.menu.active = False
 
     def key_event(self, event):
-
         if event.key == 0x1b: # Escape
             if self.current_editor and self.editor_container.has_focus():
                 self.menu.active = True
