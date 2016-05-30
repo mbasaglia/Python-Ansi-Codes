@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import re
-from StringIO import StringIO
+from six import StringIO
 
 from . import factory
 from .ansi import AnsiFormatter

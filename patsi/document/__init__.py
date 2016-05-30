@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from .tree import *
-import formatter
-import loader
-import palette
-import color
+from . import formatter
+from . import loader
+from . import palette
+from . import color

@@ -18,6 +18,21 @@
 
 SELFDIR=$(dirname $(readlink -se "${BASH_SOURCE[0]}"))
 ENV_NAME=.env
+ACTIVATE_NAME=activate
+FORCE_PYTHON3=false
+VIRTUALENV_FLAGS=()
+
+if echo "$1" | grep -qEi "^(python)?3"
+then
+    FORCE_PYTHON3=true
+fi
+
+if $FORCE_PYTHON3
+then
+    VIRTUALENV_FLAGS+=(-p python3)
+    ENV_NAME=.env3
+    ACTIVATE_NAME=activate3
+fi
 
 if ! which pip virtualenv python &>/dev/null
 then
@@ -29,7 +44,7 @@ then
 fi
 
 cd "$SELFDIR"
-virtualenv "$ENV_NAME"
-ln -s "$ENV_NAME/bin/activate" activate
-source activate
+virtualenv "${VIRTUALENV_FLAGS[@]}" "$ENV_NAME"
+ln -s "$ENV_NAME/bin/activate" $ACTIVATE_NAME
+source $ACTIVATE_NAME
 pip install -r requirements.pip

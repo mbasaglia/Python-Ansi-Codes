@@ -16,7 +16,7 @@
 #
 import formatter
 from mock import patch
-from StringIO import StringIO
+from six import StringIO
 import test_common
 
 from patsi import ansi

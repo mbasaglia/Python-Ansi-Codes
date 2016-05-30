@@ -20,6 +20,7 @@ SELFDIR=$(dirname $(readlink -se "${BASH_SOURCE[0]}"))
 SOURCES="$SELFDIR/../patsi"
 TESTS="$SELFDIR"
 VIRTUALENV_PARENT_DIR="$SELFDIR/.."
+ACTIVATE_NAME=activate
 
 COVERAGE_RUN_FLAGS=(
     run
@@ -93,20 +94,6 @@ function fail()
     exit
 }
 
-cd "$VIRTUALENV_PARENT_DIR"
-if [ \! -f activate ]
-then
-    ./setup-env.sh
-fi
-
-source activate
-
-if ! which coverage &>/dev/null
-then
-    pip install -r test/requirements-test.pip
-fi
-
-
 actions=()
 extra_args=()
 files=()
@@ -122,6 +109,9 @@ do
         --no-color|--no-colour)
             COLORS=false
             ;;
+        -3|--python3)
+            ACTIVATE_NAME=activate3
+            ;;
         test-*.py)
             files=("$TESTS/$1")
             ;;
@@ -131,6 +121,19 @@ do
     esac
     shift
 done
+
+cd "$VIRTUALENV_PARENT_DIR"
+if [ \! -f "$ACTIVATE_NAME" ]
+then
+    ./setup-env.sh
+fi
+
+source "$ACTIVATE_NAME"
+
+if ! which coverage &>/dev/null
+then
+    pip install -r test/requirements-test.pip
+fi
 
 # Expand files
 if [ "${#files[@]}" -eq 0 ]

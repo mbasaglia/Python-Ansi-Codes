@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import cairosvg
-from StringIO import StringIO
+from six import StringIO
 
 from .. import tree
 from .svg import SvgFormatter

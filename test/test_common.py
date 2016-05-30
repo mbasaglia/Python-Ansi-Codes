@@ -19,7 +19,7 @@ import sys
 import inspect
 import unittest
 from unittest import TestCase
-from StringIO import StringIO
+from six import BytesIO as StringIO
 
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
