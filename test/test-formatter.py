@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import six
 import json
 from xml.etree import ElementTree
 from mock import patch
@@ -43,7 +44,7 @@ class TestFactory(test_common.StringOutputTestCase):
     }
 
     def test_formatter(self):
-        for name, cls in TestFactory.formatters.iteritems():
+        for name, cls in six.iteritems(TestFactory.formatters):
             self.assertIs(type(factory.formatter(name)), cls)
         self.assertRaises(KeyError, lambda: factory.formatter("____"))
 
@@ -51,7 +52,7 @@ class TestFactory(test_common.StringOutputTestCase):
         self.assertSetEqual(set(TestFactory.formatters), set(factory.formats()))
 
     def test_formatter_for_file(self):
-        for name, cls in TestFactory.formatters.iteritems():
+        for name, cls in six.iteritems(TestFactory.formatters):
             self.assertIs(type(factory.formatter_for_file("foo." + name)), cls)
         self.assertRaises(KeyError, lambda: factory.formatter_for_file("foo.bar"))
 
@@ -108,7 +109,7 @@ class TestAnsiFormatter(test_common.StringOutputTestCase):
         ]
 
         for doc_col, sgr_col in colors:
-            self.assertEquals(self.fmt.color(doc_col), repr(ansi.SGR(sgr_col)))
+            self.assertEqual(self.fmt.color(doc_col), repr(ansi.SGR(sgr_col)))
 
         self.assertRaises(TypeError, lambda: self.fmt.color(69))
 
@@ -184,7 +185,7 @@ class TestAnsiSourceFormatter(test_common.StringOutputTestCase):
         self.assertTrue(self.fmt.flat)
 
     def test_color(self):
-        self.assertEquals(
+        self.assertEqual(
             self.fmt.color(color.IndexedColor(1, palette.colors8_dark)),
             r'"\x1b[31m"'+"\n"
         )
@@ -229,7 +230,7 @@ class TestTextFormatter(test_common.StringOutputTestCase):
         ]
 
         for doc_col, sgr_col in colors:
-            self.assertEquals(self.fmt.color(doc_col), "")
+            self.assertEqual(self.fmt.color(doc_col), "")
 
     def test_layer(self):
         red = color.IndexedColor(1, palette.colors16)
@@ -287,9 +288,9 @@ class TestIrcFormatter(test_common.StringOutputTestCase):
         ]
 
         for doc_col, irc_col in colors:
-            self.assertEquals(self.fmt.color(doc_col), "\x03%s,01" % irc_col)
+            self.assertEqual(self.fmt.color(doc_col), "\x03%s,01" % irc_col)
 
-        self.assertEquals(self.fmt.color(None), "\x0f")
+        self.assertEqual(self.fmt.color(None), "\x0f")
 
         self.assertRaises(TypeError, lambda: self.fmt.color(69))
 
@@ -381,7 +382,7 @@ class TestJsonFormatter(test_common.StringOutputTestCase):
         ]
 
         for doc_col, name in colors:
-            self.assertEquals(self.fmt.color(doc_col), '"%s"' % name)
+            self.assertEqual(self.fmt.color(doc_col), '"%s"' % name)
 
         self.assertRaises(Exception, lambda: self.fmt.color(69))
 
@@ -445,7 +446,7 @@ class TestJsonFormatter(test_common.StringOutputTestCase):
         )
 
 
-class TestPngFormatter(test_common.StringOutputTestCase):
+class TestPngFormatter(test_common.BytesOutputTestCase):
     fmt = formatter.PngFormatter()
 
     def test_flat(self):
@@ -463,10 +464,10 @@ class TestPngFormatter(test_common.StringOutputTestCase):
         ]
 
         for doc_col in colors:
-            self.assertEquals(self.fmt.color(doc_col), "")
+            self.assertEqual(self.fmt.color(doc_col), "")
 
     def _check_png_header(self):
-        return self._get_data().startswith("PNG")
+        return self._get_data().startswith(b"PNG")
 
     def test_layer(self):
         red = color.IndexedColor(1, palette.colors16)
@@ -489,7 +490,7 @@ class TestPngFormatter(test_common.StringOutputTestCase):
         layer = None
         self._clear_data()
         self.assertRaises(Exception, lambda: self.fmt.layer(layer, self.output))
-        self._check_data("")
+        self._check_data(b"")
 
     def test_document(self):
         red = color.IndexedColor(1, palette.colors16)
@@ -511,7 +512,7 @@ class TestSVGFormatter(test_common.StringOutputTestCase):
     xmlns = "http://www.w3.org/2000/svg"
 
     def _assert_element(self, elem, name):
-        self.assertEquals(elem.tag, "{%s}%s" % (self.xmlns, name))
+        self.assertEqual(elem.tag, "{%s}%s" % (self.xmlns, name))
 
     def _check_svg(self):
         try:
@@ -536,9 +537,9 @@ class TestSVGFormatter(test_common.StringOutputTestCase):
         ]
 
         for doc_col in colors:
-            self.assertEquals(self.fmt.color(doc_col), doc_col.rgb.hex())
+            self.assertEqual(self.fmt.color(doc_col), doc_col.rgb.hex())
 
-        self.assertEquals(self.fmt.color(None), "inherit")
+        self.assertEqual(self.fmt.color(None), "inherit")
 
         self.assertRaises(Exception, lambda: self.fmt.color(69))
 
@@ -549,33 +550,33 @@ class TestSVGFormatter(test_common.StringOutputTestCase):
         self._clear_data()
         self.fmt.layer(layer, self.output)
         elem = self._check_svg()
-        self.assertEquals(len(elem), 2)
+        self.assertEqual(len(elem), 2)
         self._assert_element(elem[0], "rect")
         self._assert_element(elem[1], "text")
-        self.assertEquals(
+        self.assertEqual(
             elem.get("width"),
             str(layer.width * self.fmt.font_width)
         )
-        self.assertEquals(
+        self.assertEqual(
             elem.get("height"),
             str(layer.height * self.fmt.font_height)
         )
-        self.assertEquals(
+        self.assertEqual(
             elem[0].get("width"),
             str(layer.width * self.fmt.font_width)
         )
-        self.assertEquals(
+        self.assertEqual(
             elem[0].get("height"),
             str(layer.height * self.fmt.font_height)
         )
         self._assert_element(elem[1][0], "tspan")
-        self.assertEquals(elem[1][0].text.strip(), layer.text.strip())
+        self.assertEqual(elem[1][0].text.strip(), layer.text.strip())
 
         layer = tree.Layer("Hello&<World>", red)
         self._clear_data()
         self.fmt.layer(layer, self.output)
         elem = self._check_svg()
-        self.assertEquals(elem[1][0].text.strip(), layer.text.strip())
+        self.assertEqual(elem[1][0].text.strip(), layer.text.strip())
 
         layer = tree.FreeColorLayer()
         layer.set_char(0, 0, "H", red)
@@ -587,29 +588,29 @@ class TestSVGFormatter(test_common.StringOutputTestCase):
         self._clear_data()
         self.fmt.layer(layer, self.output)
         elem = self._check_svg()
-        self.assertEquals(len(elem), 2)
+        self.assertEqual(len(elem), 2)
         self._assert_element(elem[0], "rect")
         self._assert_element(elem[1], "text")
-        self.assertEquals(
+        self.assertEqual(
             elem.get("width"),
             str(layer.width * self.fmt.font_width)
         )
-        self.assertEquals(
+        self.assertEqual(
             elem.get("height"),
             str(layer.height * self.fmt.font_height)
         )
-        self.assertEquals(
+        self.assertEqual(
             elem[0].get("width"),
             str(layer.width * self.fmt.font_width)
         )
-        self.assertEquals(
+        self.assertEqual(
             elem[0].get("height"),
             str(layer.height * self.fmt.font_height)
         )
-        self.assertEquals(len(elem[1]), len(layer.matrix))
+        self.assertEqual(len(elem[1]), len(layer.matrix))
         for x, tspan in enumerate(sorted(elem[1], key=lambda e: float(e.get("x")))):
             self._assert_element(tspan, "tspan")
-            self.assertEquals(tspan.text, layer.matrix[(x, 0)][0])
+            self.assertEqual(tspan.text, layer.matrix[(x, 0)][0])
             color_hex = layer.matrix[(x, 0)][1].rgb.hex()
             self.assertIn("fill:%s;" % color_hex, tspan.get("style"))
 
@@ -630,12 +631,12 @@ class TestSVGFormatter(test_common.StringOutputTestCase):
         )
         self.fmt.document(doc, self.output)
         elem = self._check_svg()
-        self.assertEquals(len(elem), len(doc.layers)+1)
+        self.assertEqual(len(elem), len(doc.layers)+1)
         self._assert_element(elem[0], "rect")
 
         for i in range(len(doc.layers)):
             self._assert_element(elem[i+1], "text")
-            self.assertEquals(
+            self.assertEqual(
                 elem[i+1][0].text.strip(),
                 doc.layers[i].text.strip()
             )
@@ -654,12 +655,12 @@ class TestSVGFormatter(test_common.StringOutputTestCase):
         self.fmt.document(doc, self.output)
         self.fmt.flat = False
         elem = self._check_svg()
-        self.assertEquals(len(elem), 2)
+        self.assertEqual(len(elem), 2)
         self._assert_element(elem[0], "rect")
         self._assert_element(elem[1], "text")
 
 
-class TestXMLFormatter(test_common.StringOutputTestCase):
+class TestXMLFormatter(test_common.BytesOutputTestCase):
     fmt = formatter.XmlFormatter()
 
     def _get_xml(self):
@@ -679,9 +680,9 @@ class TestXMLFormatter(test_common.StringOutputTestCase):
         ]
 
         for doc_col in colors:
-            self.assertEquals(self.fmt.color(doc_col), doc_col.name)
+            self.assertEqual(self.fmt.color(doc_col), doc_col.name)
 
-        self.assertEquals(self.fmt.color(None), "")
+        self.assertEqual(self.fmt.color(None), "")
 
         self.assertRaises(Exception, lambda: self.fmt.color(69))
 
@@ -692,15 +693,15 @@ class TestXMLFormatter(test_common.StringOutputTestCase):
         self._clear_data()
         self.fmt.layer(layer, self.output)
         elem = self._get_xml()
-        self.assertEquals(elem.tag, "layer")
-        self.assertEquals(elem.text, layer.text)
-        self.assertEquals(elem.get("color"), "red")
+        self.assertEqual(elem.tag, "layer")
+        self.assertEqual(elem.text, layer.text)
+        self.assertEqual(elem.get("color"), "red")
 
         layer = tree.Layer("Hello&<World>", red)
         self._clear_data()
         self.fmt.layer(layer, self.output)
         elem = self._get_xml()
-        self.assertEquals(elem.text, layer.text)
+        self.assertEqual(elem.text, layer.text)
 
         layer = tree.FreeColorLayer()
         layer.set_char(0, 0, "H", red)
@@ -712,13 +713,13 @@ class TestXMLFormatter(test_common.StringOutputTestCase):
         self._clear_data()
         self.fmt.layer(layer, self.output)
         elem = self._get_xml()
-        self.assertEquals(elem.tag, "layer")
-        self.assertEquals(len(elem), len(layer.matrix))
+        self.assertEqual(elem.tag, "layer")
+        self.assertEqual(len(elem), len(layer.matrix))
 
         for x, char in enumerate(sorted(elem, key=lambda e: float(e.get("x")))):
-            self.assertEquals(char.tag, "char")
-            self.assertEquals(char.text, layer.matrix[(x, 0)][0])
-            self.assertEquals(char.get("color"), layer.matrix[(x, 0)][1].name)
+            self.assertEqual(char.tag, "char")
+            self.assertEqual(char.text, layer.matrix[(x, 0)][0])
+            self.assertEqual(char.get("color"), layer.matrix[(x, 0)][1].name)
 
         layer = None
         self._clear_data()
@@ -730,8 +731,8 @@ class TestXMLFormatter(test_common.StringOutputTestCase):
         doc = tree.Document()
         self.fmt.document(doc, self.output)
         elem = self._get_xml()
-        self.assertEquals(len(elem), 0)
-        self.assertEquals(elem.tag, "document")
+        self.assertEqual(len(elem), 0)
+        self.assertEqual(elem.tag, "document")
 
         metadata = {"hello": "world"}
         doc = tree.Document(
@@ -745,14 +746,14 @@ class TestXMLFormatter(test_common.StringOutputTestCase):
         self._clear_data()
         self.fmt.document(doc, self.output)
         elem = self._get_xml()
-        self.assertEquals(len(elem), len(doc.layers)+1)
-        self.assertEquals(elem.tag, "document")
-        self.assertEquals(elem.get("name"), "test")
+        self.assertEqual(len(elem), len(doc.layers)+1)
+        self.assertEqual(elem.tag, "document")
+        self.assertEqual(elem.get("name"), "test")
 
         for i, layer in enumerate(elem.findall("layer")):
-            self.assertEquals(layer.text, doc.layers[i].text)
+            self.assertEqual(layer.text, doc.layers[i].text)
 
-        self.assertEquals(elem.find("metadata").find("hello").text, "world")
+        self.assertEqual(elem.find("metadata").find("hello").text, "world")
 
 
 test_common.main()

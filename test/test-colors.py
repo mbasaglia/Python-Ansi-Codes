@@ -23,35 +23,35 @@ from patsi.document.color import *
 class TestPalette(test_common.TestCase):
     names = ["foo", "bar"]
     colors = [(0xf, 0, 0), (0xb, 0xa, 2)]
-    zipped = zip(names, colors)
+    zipped = list(zip(names, colors))
 
     def test_ctor(self):
         p = palette.Palette(self.zipped)
-        self.assertEquals(p.names, self.names)
-        self.assertEquals(p.colors, self.colors)
+        self.assertEqual(p.names, self.names)
+        self.assertEqual(p.colors, self.colors)
 
         p = palette.Palette(*self.zipped)
-        self.assertEquals(p.names, self.names)
-        self.assertEquals(p.colors, self.colors)
+        self.assertEqual(p.names, self.names)
+        self.assertEqual(p.colors, self.colors)
 
         p = palette.Palette(item for item in self.zipped)
-        self.assertEquals(p.names, self.names)
-        self.assertEquals(p.colors, self.colors)
+        self.assertEqual(p.names, self.names)
+        self.assertEqual(p.colors, self.colors)
 
     def test_rgb(self):
         p = palette.Palette(self.zipped)
-        self.assertEquals(p.rgb(0), self.colors[0])
-        self.assertEquals(p.rgb(1), self.colors[1])
+        self.assertEqual(p.rgb(0), self.colors[0])
+        self.assertEqual(p.rgb(1), self.colors[1])
         self.assertRaises(IndexError, p.rgb, len(self.colors))
 
     def test_name(self):
         p = palette.Palette(self.zipped)
-        self.assertEquals(p.name(0), self.names[0])
-        self.assertEquals(p.name(1), self.names[1])
+        self.assertEqual(p.name(0), self.names[0])
+        self.assertEqual(p.name(1), self.names[1])
         self.assertRaises(IndexError, p.rgb, len(self.names))
 
     def test_iter(self):
-        self.assertEquals(list(palette.Palette(self.zipped)), self.zipped)
+        self.assertEqual(list(palette.Palette(self.zipped)), self.zipped)
 
     def test_add(self):
         other_names = ["fu", "ba", "foo"]
@@ -60,28 +60,28 @@ class TestPalette(test_common.TestCase):
 
         p = palette.Palette(self.zipped)
         p += other
-        self.assertEquals(p.names, ["foo", "bar", "fu", "ba"])
-        self.assertEquals(p.colors, [(4,5,6), (0xb, 0xa, 2), (1,2,3), (3,4,5)])
+        self.assertEqual(p.names, ["foo", "bar", "fu", "ba"])
+        self.assertEqual(p.colors, [(4,5,6), (0xb, 0xa, 2), (1,2,3), (3,4,5)])
 
         q = palette.Palette(self.zipped)
         r = q + other
-        self.assertEquals(list(q), self.zipped)
-        self.assertEquals(list(r), list(p))
+        self.assertEqual(list(q), self.zipped)
+        self.assertEqual(list(r), list(p))
 
     def test_len(self):
         p = palette.Palette(self.zipped)
-        self.assertEquals(len(p), len(self.colors))
+        self.assertEqual(len(p), len(self.colors))
 
     def test_builtin(self):
-        self.assertEquals(len(palette.colors8_dark), 8)
-        self.assertEquals(len(palette.colors8_bright), 8)
-        self.assertEquals(len(palette.colors16), 16)
-        self.assertEquals(len(palette.colors256), 256)
+        self.assertEqual(len(palette.colors8_dark), 8)
+        self.assertEqual(len(palette.colors8_bright), 8)
+        self.assertEqual(len(palette.colors16), 16)
+        self.assertEqual(len(palette.colors256), 256)
 
     def test_find_index(self):
         p = palette.Palette(self.zipped)
-        self.assertEquals(p.find_index("bar"), 1)
-        self.assertEquals(p.find_index(self.colors[1]), 1)
+        self.assertEqual(p.find_index("bar"), 1)
+        self.assertEqual(p.find_index(self.colors[1]), 1)
 
         self.assertRaises(Exception, p.find_index, "barr")
 
@@ -89,25 +89,25 @@ class TestPalette(test_common.TestCase):
 class TestIndexedColor(test_common.TestCase):
     def test_ctor(self):
         c = IndexedColor(2, palette.colors8_dark)
-        self.assertEquals(c.index, 2)
+        self.assertEqual(c.index, 2)
         self.assertIs(c.palette, palette.colors8_dark)
 
         c = IndexedColor("blue", palette.colors8_dark)
-        self.assertEquals(c.index, 4)
+        self.assertEqual(c.index, 4)
         self.assertIs(c.palette, palette.colors8_dark)
 
     def test_rgb(self):
         color = IndexedColor(2, palette.colors8_dark)
         self.assertIs(type(color.rgb), RgbColor)
-        self.assertEquals(color.rgb, palette.colors8_dark.rgb(2))
+        self.assertEqual(color.rgb, palette.colors8_dark.rgb(2))
 
     def test_rgb_tuple(self):
         color = IndexedColor(2, palette.colors8_dark)
         self.assertIs(type(color.rgb_tuple), tuple)
-        self.assertEquals(color.rgb_tuple, palette.colors8_dark.rgb_tuple(2))
+        self.assertEqual(color.rgb_tuple, palette.colors8_dark.rgb_tuple(2))
 
     def test_name(self):
-        self.assertEquals(
+        self.assertEqual(
             IndexedColor(2, palette.colors8_dark).name,
             palette.colors8_dark.name(2)
         )
@@ -131,34 +131,40 @@ class TestIndexedColor(test_common.TestCase):
         self.assertFalse(a != e)
         self.assertTrue(a != None)
 
+        self.assertEqual(hash(a), hash(b))
+        self.assertNotEqual(hash(a), hash(c))
+        self.assertNotEqual(hash(a), hash(d))
+        self.assertNotEqual(hash(a), hash(None))
+        self.assertNotEqual(hash(a), hash(e)) # Should this result equal?
+
 
 class TestRgbColor(test_common.TestCase):
     def test_hex_rgb(self):
-        self.assertEquals(RgbColor(0xf1, 0x2, 0x34).hex(), "#f10234")
+        self.assertEqual(RgbColor(0xf1, 0x2, 0x34).hex(), "#f10234")
 
     def test_ctor(self):
         c = RgbColor(1, 2, 3)
-        self.assertEquals(c.r, 1)
-        self.assertEquals(c.g, 2)
-        self.assertEquals(c.b, 3)
+        self.assertEqual(c.r, 1)
+        self.assertEqual(c.g, 2)
+        self.assertEqual(c.b, 3)
 
     def test_rgb(self):
         c = RgbColor(1, 2, 3)
         self.assertIs(type(c.rgb), RgbColor)
-        self.assertEquals(c.rgb, c)
+        self.assertEqual(c.rgb, c)
 
     def test_rgb_tuple(self):
         c = RgbColor(1, 2, 3)
         self.assertIs(type(c.rgb_tuple), tuple)
-        self.assertEquals(c.rgb_tuple, (1, 2, 3))
+        self.assertEqual(c.rgb_tuple, (1, 2, 3))
 
     def test_name(self):
         c = RgbColor(1, 2, 3)
-        self.assertEquals(c.name, c.hex())
+        self.assertEqual(c.name, c.hex())
         c.name = "foocolor"
-        self.assertEquals(c.name, "foocolor")
+        self.assertEqual(c.name, "foocolor")
         del c.name
-        self.assertEquals(c.name, c.hex())
+        self.assertEqual(c.name, c.hex())
 
     def test_cmp(self):
         a = RgbColor(1, 2, 3)
@@ -189,11 +195,19 @@ class TestRgbColor(test_common.TestCase):
         self.assertTrue(a != g)
         self.assertTrue(a != None)
 
+        self.assertEqual(hash(a), hash(b))
+        self.assertNotEqual(hash(a), hash(c))
+        self.assertNotEqual(hash(a), hash(d))
+        self.assertNotEqual(hash(a), hash(e))
+        self.assertNotEqual(hash(a), hash(f)) # Should be equal?
+        self.assertNotEqual(hash(a), hash(g))
+        self.assertNotEqual(hash(a), hash(None))
+
     def test_copy(self):
         color = RgbColor(1, 2, 3, "foocolor")
         copy = color.copy()
-        self.assertEquals(color, copy)
-        self.assertEquals(color.name, copy.name)
+        self.assertEqual(color, copy)
+        self.assertEqual(color.name, copy.name)
         self.assertIsNot(color, copy)
 
 

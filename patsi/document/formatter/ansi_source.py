@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import re
-from six import StringIO
+import six
 
 from . import factory
 from .ansi import AnsiFormatter
@@ -43,7 +43,7 @@ class AnsiSourceFormatter(object):
 
     def _wrap_ansi(self, func, object, output):
         output.write(self.prefix)
-        buffer = StringIO()
+        buffer = six.StringIO()
         func(object, buffer)
         output.write(self._replace(buffer.getvalue()))
         output.write(self.suffix)

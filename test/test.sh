@@ -21,6 +21,7 @@ SOURCES="$SELFDIR/../patsi"
 TESTS="$SELFDIR"
 VIRTUALENV_PARENT_DIR="$SELFDIR/.."
 ACTIVATE_NAME=activate
+SETUP_ENV_FLAGS=()
 
 COVERAGE_RUN_FLAGS=(
     run
@@ -111,6 +112,7 @@ do
             ;;
         -3|--python3)
             ACTIVATE_NAME=activate3
+            SETUP_ENV_FLAGS+=(python3)
             ;;
         test-*.py)
             files=("$TESTS/$1")
@@ -125,7 +127,7 @@ done
 cd "$VIRTUALENV_PARENT_DIR"
 if [ \! -f "$ACTIVATE_NAME" ]
 then
-    ./setup-env.sh
+    ./setup-env.sh "${SETUP_ENV_FLAGS[@]}"
 fi
 
 source "$ACTIVATE_NAME"

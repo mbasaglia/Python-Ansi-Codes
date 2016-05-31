@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import cairosvg
-from six import StringIO
+import six
 
 from .. import tree
 from .svg import SvgFormatter
@@ -29,7 +29,7 @@ class PngFormatter(object):
         self._svg_formatter = SvgFormatter(*args, **kwargs)
 
     def document(self, doc, output):
-        buffer = StringIO()
+        buffer = six.StringIO()
         self._svg_formatter.document(doc, buffer)
         cairosvg.svg2png(bytestring=buffer.getvalue(), write_to=output)
 

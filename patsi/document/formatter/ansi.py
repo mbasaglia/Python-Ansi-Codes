@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import six
+
 from . import factory
 from .. import tree
 from .. import color
@@ -32,9 +34,9 @@ class AnsiFormatter(object):
             for line in layer.text.splitlines(True):
                 output.write(self.color(layer.color) + line)
         elif isinstance(layer, tree.FreeColorLayer):
-            for y in xrange(layer.height):
+            for y in six.moves.range(layer.height):
                 prev_color = None
-                for x in xrange(layer.width):
+                for x in six.moves.range(layer.width):
                     char, col = layer.matrix.get((x, y), (" ", color.UnchangedColor))
                     if col is not color.UnchangedColor and col != prev_color:
                         prev_color = col

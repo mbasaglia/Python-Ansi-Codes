@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from __future__ import absolute_import
+import six
 import xml.etree.cElementTree as ElementTree
 
 from . import factory
@@ -29,7 +30,7 @@ class XmlFormatter(object):
         xml_doc.attrib["name"] = doc.name
         if doc.metadata:
             metadata = ElementTree.SubElement(xml_doc, "metadata")
-            for key, val in doc.metadata.iteritems():
+            for key, val in six.iteritems(doc.metadata):
                 element = ElementTree.SubElement(metadata, key)
                 element.text = val
         for layer in doc.layers:

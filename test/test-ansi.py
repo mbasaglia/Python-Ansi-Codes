@@ -194,10 +194,10 @@ class TestGraphicRendition(test_common.TestCase):
 
     def test_ctor_color_invalid(self):
         # TODO Is this the right behaviour or should it eat the mismatched flags?
-        self.assertEquals(len(SGR([98, 5, 2, 3]).flags), 3)
-        self.assertEquals(len(SGR([38, 2, 1]).flags), 2)
-        self.assertEquals(len(SGR([48, 2, 1]).flags), 2)
-        self.assertEquals(len(SGR([108, 2, 1]).flags), 2)
+        self.assertEqual(len(SGR([98, 5, 2, 3]).flags), 3)
+        self.assertEqual(len(SGR([38, 2, 1]).flags), 2)
+        self.assertEqual(len(SGR([48, 2, 1]).flags), 2)
+        self.assertEqual(len(SGR([108, 2, 1]).flags), 2)
 
     def test_background(self):
         color = SGR.Red
@@ -213,14 +213,14 @@ class TestGraphicRendition(test_common.TestCase):
             (SGR.Underline, 24),
         ]
         for a, b in reversible:
-            self.assertEquals(SGR.reverse(a), b)
-            self.assertEquals(SGR.reverse(b), a)
-        self.assertEquals(SGR.reverse(41), 49)
-        self.assertEquals(SGR.reverse(31), 39)
-        self.assertEquals(SGR.reverse(SGR.Red), 39)
-        self.assertEquals(SGR.reverse(91), 39)
-        self.assertEquals(SGR.reverse(SGR.Background(SGR.ColorRGB(1,2,3))), 49)
-        self.assertEquals(SGR.reverse(1234), 0)
+            self.assertEqual(SGR.reverse(a), b)
+            self.assertEqual(SGR.reverse(b), a)
+        self.assertEqual(SGR.reverse(41), 49)
+        self.assertEqual(SGR.reverse(31), 39)
+        self.assertEqual(SGR.reverse(SGR.Red), 39)
+        self.assertEqual(SGR.reverse(91), 39)
+        self.assertEqual(SGR.reverse(SGR.Background(SGR.ColorRGB(1,2,3))), 49)
+        self.assertEqual(SGR.reverse(1234), 0)
 
     def test_args(self):
         self.assertEqual(SGR([1, 2, 3]).args(), [1, 2, 3])
@@ -235,8 +235,8 @@ class TestCharMover(test_common.TestCase):
         self.assertFalse(m.moved)
         m.move(2, 3)
         self.assertTrue(m.moved)
-        self.assertEquals(m.x, 2)
-        self.assertEquals(m.y, 3)
+        self.assertEqual(m.x, 2)
+        self.assertEqual(m.y, 3)
 
     def test_loop(self):
         m = CharMover(0, 0)
@@ -244,28 +244,28 @@ class TestCharMover(test_common.TestCase):
         gen = m.loop(string)
 
         self.assertFalse(m.moved)
-        self.assertEquals(next(gen), 'a')
-        self.assertEquals((m.x, m.y), (3, 0))
+        self.assertEqual(next(gen), 'a')
+        self.assertEqual((m.x, m.y), (3, 0))
         self.assertTrue(m.moved)
 
-        self.assertEquals(next(gen), 'b')
-        self.assertEquals((m.x, m.y), (4, 0))
+        self.assertEqual(next(gen), 'b')
+        self.assertEqual((m.x, m.y), (4, 0))
         self.assertFalse(m.moved)
 
-        self.assertEquals(next(gen), 'c')
-        self.assertEquals((m.x, m.y), (0, 1))
+        self.assertEqual(next(gen), 'c')
+        self.assertEqual((m.x, m.y), (0, 1))
         self.assertTrue(m.moved)
 
-        self.assertEquals(next(gen), 'd')
-        self.assertEquals((m.x, m.y), (5, 1))
+        self.assertEqual(next(gen), 'd')
+        self.assertEqual((m.x, m.y), (5, 1))
         self.assertTrue(m.moved)
 
-        self.assertEquals(next(gen), 'e')
-        self.assertEquals((m.x, m.y), (0, 1))
+        self.assertEqual(next(gen), 'e')
+        self.assertEqual((m.x, m.y), (0, 1))
         self.assertTrue(m.moved)
 
-        self.assertEquals(next(gen), 'f')
-        self.assertEquals((m.x, m.y), (2, 2))
+        self.assertEqual(next(gen), 'f')
+        self.assertEqual((m.x, m.y), (2, 2))
         self.assertTrue(m.moved)
 
 
@@ -336,11 +336,11 @@ class TestAnsiRenderer(test_common.StringOutputTestCase):
 
     def test_write(self):
         self.renderer.write("Hello")
-        self.assertEquals(self.output.getvalue(), "Hello")
+        self.assertEqual(self.output.getvalue(), "Hello")
 
     def test_overlay(self):
         self.renderer.overlay("abc\nd\x1b[31me")
-        self.assertEquals(self.output.getvalue(), "abc\x1b[2;1Hd\x1b[31me")
+        self.assertEqual(self.output.getvalue(), "abc\x1b[2;1Hd\x1b[31me")
 
 
 test_common.main()

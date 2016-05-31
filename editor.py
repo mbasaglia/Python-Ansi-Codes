@@ -17,6 +17,7 @@
 #
 import os
 import sys
+import six
 import curses
 import curses.ascii
 from contextlib import contextmanager
@@ -74,7 +75,7 @@ class Event(object):
     def __init__(self, type, **kwargs):
         self.type = type
         self.propagate = True
-        for attr, val in kwargs.iteritems():
+        for attr, val in six.iteritems(kwargs):
             setattr(self, attr, val)
 
     def accept(self):
@@ -287,7 +288,7 @@ class Editor(Widget):
         layer = self.document.flattened()
         win_height, win_width = self.window.getmaxyx()
 
-        for pos, item in layer.matrix.iteritems():
+        for pos, item in six.iteritems(layer.matrix):
             pos = Point(pos) + self.offset
             if pos.x < 1 or pos.y < 1 or pos.x >= win_width - 1 or pos.y >= win_height-1:
                 continue

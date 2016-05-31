@@ -21,8 +21,8 @@ from patsi.widgets import geometry as geo
 
 class TestPoint(test_common.TestCase):
     def assert_point(self, point, x, y):
-        self.assertEquals(point.x, x)
-        self.assertEquals(point.y, y)
+        self.assertEqual(point.x, x)
+        self.assertEqual(point.y, y)
 
     def test_ctor(self):
         self.assert_point(geo.Point(), 0, 0)
@@ -60,26 +60,26 @@ class TestPoint(test_common.TestCase):
 
     def test_elements(self):
         point = geo.Point(4, 5)
-        self.assertEquals(point[0], point.x)
-        self.assertEquals(point["x"], point.x)
-        self.assertEquals(point[1], point.y)
-        self.assertEquals(point["y"], point.y)
+        self.assertEqual(point[0], point.x)
+        self.assertEqual(point["x"], point.x)
+        self.assertEqual(point[1], point.y)
+        self.assertEqual(point["y"], point.y)
         self.assertRaises(KeyError, lambda: point[2])
         self.assertRaises(KeyError, lambda: point["z"])
 
         x, y = point
         self.assert_point(point, x, y)
-        self.assertEquals(tuple(point), (x, y))
+        self.assertEqual(tuple(point), (x, y))
 
     def test_repr(self):
         point = geo.Point(4, 5)
-        self.assertEquals(str(point), str(tuple(point)))
+        self.assertEqual(str(point), str(tuple(point)))
 
 
 class TestRect(test_common.TestCase):
     def assert_rect(self, rect, x1, y1, x2, y2):
-        self.assertEquals(rect.top_left, geo.Point(x1, y1))
-        self.assertEquals(rect.bottom_right, geo.Point(x2, y2))
+        self.assertEqual(rect.top_left, geo.Point(x1, y1))
+        self.assertEqual(rect.bottom_right, geo.Point(x2, y2))
 
     def test_ctor(self):
         tl = geo.Point(1, 2)
@@ -117,29 +117,29 @@ class TestRect(test_common.TestCase):
 
     def test_property_getters(self):
         rect = geo.Rect(x1=1, y1=2, x2=11, y2=32)
-        self.assertEquals(rect.top_left, geo.Point(1, 2))
-        self.assertEquals(rect.bottom_right, geo.Point(11, 32))
-        self.assertEquals(rect.top_right, geo.Point(11, 2))
-        self.assertEquals(rect.bottom_left, geo.Point(1, 32))
-        self.assertEquals(rect.center, geo.Point(6, 17))
+        self.assertEqual(rect.top_left, geo.Point(1, 2))
+        self.assertEqual(rect.bottom_right, geo.Point(11, 32))
+        self.assertEqual(rect.top_right, geo.Point(11, 2))
+        self.assertEqual(rect.bottom_left, geo.Point(1, 32))
+        self.assertEqual(rect.center, geo.Point(6, 17))
 
-        self.assertEquals(rect.top, 2)
-        self.assertEquals(rect.left, 1)
-        self.assertEquals(rect.bottom, 32)
-        self.assertEquals(rect.right, 11)
+        self.assertEqual(rect.top, 2)
+        self.assertEqual(rect.left, 1)
+        self.assertEqual(rect.bottom, 32)
+        self.assertEqual(rect.right, 11)
 
-        self.assertEquals(rect.x1, 1)
-        self.assertEquals(rect.y1, 2)
-        self.assertEquals(rect.x2, 11)
-        self.assertEquals(rect.y2, 32)
+        self.assertEqual(rect.x1, 1)
+        self.assertEqual(rect.y1, 2)
+        self.assertEqual(rect.x2, 11)
+        self.assertEqual(rect.y2, 32)
 
-        self.assertEquals(rect.x, 1)
-        self.assertEquals(rect.y, 2)
-        self.assertEquals(rect.width, 10)
-        self.assertEquals(rect.height, 30)
+        self.assertEqual(rect.x, 1)
+        self.assertEqual(rect.y, 2)
+        self.assertEqual(rect.width, 10)
+        self.assertEqual(rect.height, 30)
 
-        self.assertEquals(rect.pos, geo.Point(1, 2))
-        self.assertEquals(rect.size, geo.Point(10, 30))
+        self.assertEqual(rect.pos, geo.Point(1, 2))
+        self.assertEqual(rect.size, geo.Point(10, 30))
 
     def test_property_setters(self):
         rect = geo.Rect(x1=1, y1=2, x2=11, y2=32)

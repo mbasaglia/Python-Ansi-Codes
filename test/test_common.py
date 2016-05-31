@@ -19,7 +19,7 @@ import sys
 import inspect
 import unittest
 from unittest import TestCase
-from six import BytesIO as StringIO
+import six
 
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -27,7 +27,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class StringOutputTestCase(unittest.TestCase):
     def setUp(self):
-        self.output = StringIO()
+        self.output = six.StringIO()
 
     def _get_data(self):
         return self.output.getvalue()
@@ -37,14 +37,28 @@ class StringOutputTestCase(unittest.TestCase):
         self.output.seek(0)
 
     def _check_data(self, *args):
-        self.assertEquals(
+        self.assertEqual(
             self._get_data(),
             "".join(str(arg) for arg in args)
         )
 
 
+class BytesOutputTestCase(StringOutputTestCase):
+    def setUp(self):
+        self.output = six.BytesIO()
+
+    def _check_data(self, *args):
+        self.assertEqual(
+            self._get_data(),
+            b"".join(
+                arg if type(arg) is bytes else bytes(str(arg), "utf-8")
+                for arg in args
+            )
+        )
+
+
 class MockFile(object):
-    def __init__(self, wrapped=StringIO()):
+    def __init__(self, wrapped=six.StringIO()):
         self._wrapped = wrapped
 
     def __getattr__(self, name):
@@ -73,7 +87,7 @@ class MockFile(object):
         return self
 
     def reset(self, contents=""):
-        self._wrapped = StringIO(contents)
+        self._wrapped = six.StringIO(contents)
 
 
 def main():

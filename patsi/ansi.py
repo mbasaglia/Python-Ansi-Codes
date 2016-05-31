@@ -16,6 +16,7 @@
 #
 import re
 import sys
+import six
 import copy
 from contextlib import contextmanager
 
@@ -69,7 +70,7 @@ class AnsiCode(object):
         Converts a regex match (matched from CSI_PATTERN) into a code object
         """
         letter = match.group(3)
-        args = filter(bool, match.group(2).split(";"))
+        args = list(filter(bool, match.group(2).split(";")))
         private = match.group(1)
         if (letter == 'H' or letter == 'f') and not private:
             return CursorPosition(
@@ -128,7 +129,20 @@ class CursorPosition(AnsiCode):
         return [self.row, self.column]
 
 
-class GraphicRendition(AnsiCode):
+class _GraphicRendition_Meta(type):
+    """
+    Sets up shortcuts to access standard colors
+    """
+    @staticmethod
+    def __new__(meta, name, bases, dct):
+        cls = type.__new__(meta, name, bases, dct)
+        for name, value in six.iteritems(vars(cls.Color)):
+            if name[0].isupper():
+                setattr(cls, name, cls.Color(value))
+        return cls
+
+
+class GraphicRendition(six.with_metaclass(_GraphicRendition_Meta, AnsiCode)):
     """
     Class representing a SGR (Select Graphic Rendition) code.
     """
@@ -241,7 +255,9 @@ class GraphicRendition(AnsiCode):
 
         while flags:
             flag = flags.pop(0)
-            if flag >= 30 and flag < 40:
+            if type(flag) is not int:
+                self.flags.append(flag)
+            elif flag >= 30 and flag < 40:
                 color = pop_color(flag % 10, flags, False, False)
                 if color:
                     self.flags.append(color)
@@ -273,31 +289,19 @@ class GraphicRendition(AnsiCode):
             return 22
         elif flag == 22:
             return 1
-        elif flag in xrange(1, 10):
+        elif flag in six.moves.range(1, 10):
             return 20 + flag
-        elif flag in xrange(21, 30):
+        elif flag in six.moves.range(21, 30):
             return flag - 20
-        elif flag in xrange(30, 40) or flag in xrange(90, 100):
+        elif flag in six.moves.range(30, 40) or flag in six.moves.range(90, 100):
             return 39
-        elif flag in xrange(40, 50) or flag in xrange(100, 110):
+        elif flag in six.moves.range(40, 50) or flag in six.moves.range(100, 110):
             return 49
         return 0
 
     def args(self):
         return self.flags
 
-    class _Meta(type):
-        """
-        Sets up shortcuts to access standard colors
-        """
-        @staticmethod
-        def __new__(meta, name, bases, dct):
-            cls = type.__new__(meta, name, bases, dct)
-            for name, value in vars(cls.Color).iteritems():
-                if name[0].isupper():
-                    setattr(cls, name, cls.Color(value))
-            return cls
-    __metaclass__ = _Meta
 
 
 # Shorthand for GraphicRendition

@@ -61,6 +61,9 @@ class IndexedColor(object):
         """
         return not (self == oth)
 
+    def __hash__(self):
+        return hash((IndexedColor, self.index, self.palette))
+
 
 class RgbColor(object):
     """
@@ -142,6 +145,9 @@ class RgbColor(object):
         if type(obj) is tuple and len(obj) == 3:
             return obj
         return obj.rgb_tuple
+
+    def __hash__(self):
+        return hash((RgbColor, self.rgb_tuple))
 
 
 class UnchangedColorType(object):

@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from __future__ import absolute_import
+import six
 from xml.sax.saxutils import escape
 from contextlib import contextmanager
 
@@ -105,7 +106,7 @@ class SvgFormatter(object):
         elif isinstance(layer, tree.FreeColorLayer):
             output.write(open_rect())
             prev_color = None
-            for pos, item in layer.matrix.iteritems():
+            for pos, item in six.iteritems(layer.matrix):
                 char, col = item
                 if col is not color.UnchangedColor and col != prev_color:
                     prev_color = col

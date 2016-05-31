@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import six
+
 from . import factory
 from .. import tree
 
@@ -28,8 +30,8 @@ class TextFormatter(object):
         if isinstance(layer, tree.Layer):
             output.write(layer.text)
         elif isinstance(layer, tree.FreeColorLayer):
-            for y in xrange(layer.height):
-                for x in xrange(layer.width):
+            for y in six.moves.range(layer.height):
+                for x in six.moves.range(layer.width):
                     char, color = layer.matrix.get((x, y), (" ", None))
                     output.write(char)
                 output.write("\n")
