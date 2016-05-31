@@ -640,7 +640,7 @@ class Menu(Widget):
             self.current.action()
 
     def _starting_y(self):
-        return self.window_bounds().center.y - len(self.items) / 2
+        return int(self.window_bounds().center.y - len(self.items) / 2)
 
     def render(self):
         y = self._starting_y()
