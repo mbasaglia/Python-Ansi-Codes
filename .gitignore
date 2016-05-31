@@ -3,5 +3,7 @@
 .coverage
 .env/
 activate
+.env3/
+activate3
 MANIFEST
 dist/
